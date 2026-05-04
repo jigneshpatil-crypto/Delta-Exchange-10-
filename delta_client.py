@@ -67,21 +67,27 @@ class DeltaClient:
 
         headers = {}
         if auth:
+            if not self.api_key or not self.api_secret:
+                logger.error("CRITICAL: API Key or Secret is EMPTY. Check Render Environment Variables!")
+                return None
             headers = self._auth_headers("GET", path, query_string)
 
         try:
             resp = self.session.get(
                 url, params=params, headers=headers, timeout=(5, 30)
             )
-            resp.raise_for_status()
+            if resp.status_code != 200:
+                logger.error(f"API HTTP {resp.status_code} Error on GET {path}: {resp.text}")
+                return None
+                
             data = resp.json()
             if not data.get("success", True):
                 error = data.get("error", {})
-                logger.error(f"API Error on GET {path}: {error}")
+                logger.error(f"Delta API Logic Error on GET {path}: {error}")
                 return None
             return data.get("result", data)
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Request failed GET {path}: {e}")
+        except Exception as e:
+            logger.error(f"Network/Request failed GET {path}: {str(e)}")
             return None
 
     def _post(self, path, payload_dict):
