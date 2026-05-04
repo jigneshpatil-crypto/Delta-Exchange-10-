@@ -28,6 +28,9 @@ class Database:
             logger.error(f"DB connection failed: {e}")
             self.conn = None
 
+    def test_connection(self):
+        return self._ensure_connection()
+
     def _ensure_connection(self):
         if self.conn is None or self.conn.closed:
             self._connect()

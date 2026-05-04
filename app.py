@@ -134,6 +134,19 @@ def api_status():
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
+@app.route("/api/diagnostic")
+def api_diagnostic():
+    """Check environment health (without exposing secrets)."""
+    return jsonify({
+        "mode": config.MODE,
+        "api_key_set": len(config.DELTA_API_KEY) > 10,
+        "api_secret_set": len(config.DELTA_API_SECRET) > 10,
+        "db_connected": bot.db.test_connection(),
+        "product_id": bot.product_id,
+        "base_url": config.DELTA_BASE_URL,
+    })
+
+
 @app.route("/api/panic", methods=["POST"])
 def api_panic():
     """Toggle panic mode (Emergency Stop)."""
