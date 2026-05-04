@@ -255,18 +255,28 @@ class DeltaClient:
         GET /v2/wallet/balances
         """
         result = self._get("/v2/wallet/balances", auth=True)
-        if result and isinstance(result, list):
+        if result is None:
+            logger.error("Wallet balance API returned None - check API keys and connectivity")
+            return {"balance": 0, "available_balance": 0, "asset": "USD"}
+
+        if isinstance(result, list):
             for wallet in result:
                 asset = wallet.get("asset_symbol", "")
+                # Delta India uses USD or USDT
                 if asset in ("USDT", "USD"):
+                    balance = float(wallet.get("balance", 0))
+                    avail = float(wallet.get("available_balance", 0))
+                    logger.info(f"Wallet balance found: {balance} {asset}")
                     return {
-                        "balance": float(wallet.get("balance", 0)),
-                        "available_balance": float(
-                            wallet.get("available_balance", 0)
-                        ),
+                        "balance": balance,
+                        "available_balance": avail,
                         "asset": asset,
                     }
-        return {"balance": 0, "available_balance": 0, "asset": "USDT"}
+            logger.warning(f"No USD/USDT asset found in wallet balances: {[w.get('asset_symbol') for w in result]}")
+        else:
+            logger.error(f"Unexpected wallet balance response format: {type(result)}")
+
+        return {"balance": 0, "available_balance": 0, "asset": "USD"}
 
     def get_position(self, product_id=None):
         """
