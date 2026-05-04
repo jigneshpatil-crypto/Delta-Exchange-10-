@@ -64,6 +64,7 @@ DAILY_LOCK_HOURS = 24          # Lock duration after hitting drawdown
 SPREAD_THRESHOLD_PCT = 0.0005  # Max spread: 0.05%
 TIMEOUT_MINUTES = 45           # Close trade if stuck for 45 min
 MAX_ACTIVE_TRADES = 1          # Only 1 trade at a time
+MAX_TRADES_PER_DAY = 3         # Stop trading after 3 trades in a day
 BREAKEVEN_TRIGGER_PCT = 0.005  # Move SL to entry at 0.5% profit
 NEWS_BUFFER_MINUTES = 30       # Pause 30 min before/after high-impact news
 

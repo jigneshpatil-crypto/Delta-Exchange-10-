@@ -233,6 +233,14 @@ class RiskManager:
         if self.is_locked():
             return False, 0, "Bot is locked due to daily drawdown limit"
 
+        # Check daily trade count
+        today_trades = self.db.get_today_trades()
+        # Count closed trades + current open if any (though loop handles open)
+        # Usually we count closed trades to see how many we've DONE
+        closed_today = [t for t in today_trades if t.get("status") == "closed"]
+        if len(closed_today) >= config.MAX_TRADES_PER_DAY:
+            return False, 0, f"Daily trade limit ({config.MAX_TRADES_PER_DAY}) reached"
+
         # Check drawdown
         if self.check_drawdown(current_balance):
             return False, 0, "Daily drawdown limit just hit — locking bot"
