@@ -40,7 +40,7 @@ class TradingBot:
         self.risk = RiskManager(self.db)
         self.executor = OrderExecutor(self.client, self.db, self.alerts)
 
-        # Cache product ID for BTC/USDT
+        # Cache product ID for BTC/USD
         self.product_id = self.client.get_product_id()
         if not self.product_id:
             logger.error("Failed to obtain product ID – bot may not execute trades")
@@ -48,6 +48,18 @@ class TradingBot:
         # Internal state
         self.last_candle_time = None
         logger.info("Bot initialized successfully (product_id=%s)", self.product_id)
+
+        # Send professional startup notification via Telegram
+        try:
+            wallet = self.client.get_wallet_balance()
+            balance = wallet.get("balance", 0)
+            self.alerts.send_startup_alert(
+                wallet_balance=balance,
+                product_id=self.product_id,
+            )
+            logger.info("Startup Telegram alert sent")
+        except Exception as e:
+            logger.warning("Could not send startup alert: %s", e)
 
     def _fetch_and_prepare_candles(self):
         """Fetch OHLCV from Delta Exchange and return a DataFrame, or None on failure."""
