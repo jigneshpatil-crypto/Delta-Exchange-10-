@@ -1,0 +1,21 @@
+# ====== BTC Global Elite Scalper V6 ======
+# Delta Exchange India — Zero-Cost Automation
+# ============================================
+
+# --- Core ---
+requests>=2.31.0
+pandas>=2.2.0
+numpy>=1.26.0
+
+# --- Web Server ---
+flask>=3.0.0
+gunicorn>=21.2.0
+
+# --- Database (Supabase PostgreSQL) ---
+psycopg2-binary>=2.9.9
+
+# --- Scheduler ---
+apscheduler>=3.10.4
+
+# --- Environment ---
+python-dotenv>=1.0.0

@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: btc-global-elite-v6
+    env: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: MODE
+        value: testnet
+      - key: DELTA_API_KEY
+        sync: false
+      - key: DELTA_API_SECRET
+        sync: false
+      - key: DELTA_BASE_URL
+        value: https://cdn-ind.testnet.deltaex.org
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: FINNHUB_API_KEY
+        sync: false
+      - key: RENDER_APP_URL
+        # Set this to your actual render URL after deployment
+        value: https://btc-global-elite-v6.onrender.com

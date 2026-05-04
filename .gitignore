@@ -1,0 +1,22 @@
+# Environment variables (NEVER commit!)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test scripts
+_test_*.py
+
+# OS
+.DS_Store
+Thumbs.db
