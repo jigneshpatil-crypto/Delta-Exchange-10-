@@ -74,6 +74,7 @@ def api_status():
             "symbol": config.SYMBOL,
             "timeframe": config.TIMEFRAME,
             "leverage": config.LEVERAGE,
+            "panic_mode": bot.panic_mode,
             "bot_state": {
                 "is_locked": state.get("is_locked", False),
                 "last_candle_time": str(state.get("last_candle_time", "")),
@@ -102,16 +103,17 @@ def api_status():
                 "wins": today_wins,
                 "losses": today_losses,
                 "pnl": round(today_pnl, 4),
+                "target": config.MAX_DAILY_DRAWDOWN * 100, # Placeholder or actual target
             },
             "recent_trades": [
                 {
                     "id": t.get("id"),
-                    "side": t.get("side", ""),
+                    "side": t.get("side", "").upper(),
                     "entry_price": t.get("entry_price", 0),
                     "exit_price": t.get("exit_price", 0),
                     "pnl": t.get("pnl", 0),
                     "pnl_pct": t.get("pnl_pct", 0),
-                    "status": t.get("status", ""),
+                    "status": t.get("status", "").upper(),
                     "close_reason": t.get("close_reason", ""),
                     "entry_time": str(t.get("entry_time", "")),
                     "exit_time": str(t.get("exit_time", "")),
@@ -129,6 +131,32 @@ def api_status():
         })
     except Exception as e:
         logger.error(f"API status error: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/panic", methods=["POST"])
+def api_panic():
+    """Toggle panic mode (Emergency Stop)."""
+    bot.panic_mode = not bot.panic_mode
+    action = "ACTIVATED" if bot.panic_mode else "DEACTIVATED"
+    bot.db.log_event("PANIC_TOGGLE", f"Panic mode {action} via dashboard")
+    return jsonify({"ok": True, "panic_mode": bot.panic_mode, "message": f"Panic mode {action}"})
+
+
+@app.route("/api/refresh", methods=["POST"])
+def api_refresh():
+    """Force re-sync of wallet and product state."""
+    try:
+        bot.product_id = bot.client.get_product_id()
+        wallet = bot.client.get_wallet_balance()
+        bot.db.log_event("MANUAL_REFRESH", "System state re-synchronized via dashboard")
+        return jsonify({
+            "ok": True,
+            "product_id": bot.product_id,
+            "wallet": wallet,
+            "message": "System synchronized successfully"
+        })
+    except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
 

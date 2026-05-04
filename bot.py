@@ -39,6 +39,7 @@ class TradingBot:
         self.safety = SafetyFilters(self.client)
         self.risk = RiskManager(self.db)
         self.executor = OrderExecutor(self.client, self.db, self.alerts)
+        self.panic_mode = False  # Emergency stop flag
 
         # Cache product ID for BTC/USD
         self.product_id = self.client.get_product_id()
@@ -159,6 +160,11 @@ class TradingBot:
 
         while True:
             try:
+                if self.panic_mode:
+                    logger.warning("🚨 PANIC MODE ACTIVE - Bot is frozen")
+                    time.sleep(10)
+                    continue
+
                 # -------- 1. Fetch candles --------
                 df = self._fetch_and_prepare_candles()
                 if df is None or len(df) < config.EMA_PERIOD:
