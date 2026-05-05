@@ -3,520 +3,793 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNIPER V6 PRO — Elite Trading Dashboard</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React & ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel for JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Lucide Icons -->
+    <title>Sniper Bot | Professional Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/lucide-react@latest"></script>
-    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #020408;
+        :root {
+            --bg-base: #06090e;
+            --bg-glass: rgba(16, 22, 35, 0.65);
+            --bg-glass-hover: rgba(26, 35, 55, 0.85);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-main: #f0f4f8;
+            --text-muted: #8a96a8;
+            --accent-primary: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.5);
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.3);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.3);
+            --warning: #f59e0b;
+        }
+
+        * {
             margin: 0;
-            color: #cbd5e1;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        @keyframes dash {
-            from { stroke-dashoffset: 200; }
-            to { stroke-dashoffset: 0; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
         }
 
-        .scrollbar-thin::-webkit-scrollbar {
-            width: 4px;
+        /* Ambient Background Gradients */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -20%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 60%);
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.4;
         }
-        .scrollbar-thin::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.05);
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -20%;
+            right: -10%;
+            width: 40vw;
+            height: 40vw;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 60%);
+            filter: blur(100px);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        /* --- Header --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .brand-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-primary), #8b5cf6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .brand-icon i {
+            color: white;
+            width: 24px;
+            height: 24px;
+        }
+
+        .brand-text h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .badge {
+            padding: 0.4rem 1rem;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge.production {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge.testnet {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge.locked {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: currentColor;
+            border-radius: 50%;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
             border-radius: 10px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
         }
-        
-        .animate-pulse-fast {
-            animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+        .btn-panic {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
         }
+
+        .btn-panic:hover {
+            background: var(--danger);
+            color: white;
+            box-shadow: 0 0 20px var(--danger-glow);
+        }
+
+        .btn-panic.active {
+            background: var(--danger);
+            color: white;
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        /* --- Grid Layouts --- */
+        .grid-kpi {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            animation: fadeIn 0.8s ease 0.1s both;
+        }
+
+        .grid-main {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            animation: fadeIn 0.8s ease 0.2s both;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* --- Glass Cards --- */
+        .card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.15);
+            background: var(--bg-glass-hover);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-header i {
+            color: var(--accent-primary);
+        }
+
+        /* KPI Values */
+        .kpi-val {
+            font-size: 2.2rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-sub {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .color-up { color: var(--success); text-shadow: 0 0 10px var(--success-glow); }
+        .color-down { color: var(--danger); text-shadow: 0 0 10px var(--danger-glow); }
+        .color-neutral { color: var(--text-main); }
+
+        /* --- Strategy Details --- */
+        .detail-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .detail-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .detail-val {
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* --- Tables --- */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.75rem;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* --- Terminal Logs --- */
+        .terminal {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            height: 350px;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .terminal::-webkit-scrollbar {
+            width: 6px;
+        }
+        .terminal::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+        }
+
+        .log-line {
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .log-time { color: #5c6a82; }
+        .log-type { color: var(--accent-primary); font-weight: bold; width: 80px; flex-shrink: 0; }
+        .log-msg { color: #cdd6f4; }
         
+        .log-type.ENTRY { color: var(--success); }
+        .log-type.EXIT { color: var(--warning); }
+        .log-type.ERROR { color: var(--danger); }
+        .log-type.RISK_BLOCK { color: var(--danger); }
+
+        /* Animations */
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: .3; }
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* Status Indicator */
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px var(--success-glow);
+            position: relative;
+        }
+        .status-dot::after {
+            content: '';
+            position: absolute;
+            top: -4px; left: -4px; right: -4px; bottom: -4px;
+            border-radius: 50%;
+            border: 2px solid var(--success);
+            animation: ripple 1.5s infinite ease-out;
+            opacity: 0;
+        }
+        @keyframes ripple {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            100% { transform: scale(2); opacity: 0; }
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
-        const { 
-            TrendingUp, Wallet, Target, Activity, 
-            Terminal, ShieldCheck, Zap, BarChart3, 
-            Clock, RefreshCw, AlertCircle, ShieldAlert,
-            ArrowUpRight, ArrowDownRight, LayoutDashboard,
-            Cpu, Power, Settings2, History, X, CheckCircle2
-        } = LucideReact;
-
-        const Sparkline = ({ color }) => (
-            <svg className="w-full h-12 mt-4" viewBox="0 0 100 40">
-                <path 
-                    d="M0 35 Q 10 30, 20 32 T 40 20 T 60 25 T 80 15 T 100 22" 
-                    fill="none" 
-                    stroke={color} 
-                    strokeWidth="2"
-                    style={{ strokeDasharray: 200, animation: 'dash 2s ease-in-out infinite' }}
-                />
-                <path 
-                    d="M0 35 Q 10 30, 20 32 T 40 20 T 60 25 T 80 15 T 100 22 V 40 H 0 Z" 
-                    fill={`url(#gradient-${color.replace('#', '')})`} 
-                    className="opacity-20"
-                />
-                <defs>
-                    <linearGradient id={`gradient-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={color} />
-                        <stop offset="100%" stopColor="transparent" />
-                    </linearGradient>
-                </defs>
-            </svg>
-        );
-
-        const App = () => {
-            const [activeTab, setActiveTab] = useState('dashboard');
-            const [isSyncing, setIsSyncing] = useState(false);
-            const [loading, setLoading] = useState(true);
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="brand">
+                <div class="brand-icon">
+                    <i data-lucide="crosshair"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>SNIPER TERMINAL</h1>
+                    <p id="ui-strategy">Loading System...</p>
+                </div>
+            </div>
             
-            const [data, setData] = useState({
-                price: 0,
-                balance: 0,
-                avail: 0,
-                todayPnl: 0,
-                target: 5.0,
-                panicMode: false,
-                mode: 'testnet',
-                symbol: 'BTCUSD',
-                timeframe: '3m',
-                leverage: 10,
-                trades: [],
-                logs: []
-            });
+            <div class="header-controls">
+                <div class="status-dot" title="System Online"></div>
+                <div id="ui-clock" style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-muted);">
+                    00:00:00 UTC
+                </div>
+                <div id="ui-mode-badge" class="badge production">
+                    <div class="pulse-dot"></div>
+                    PRODUCTION
+                </div>
+                <div id="ui-lock-badge" class="badge locked" style="display: none;">
+                    <i data-lucide="lock" style="width: 14px; height: 14px;"></i>
+                    DRAWDOWN LOCK
+                </div>
+                <button id="btn-panic" class="btn btn-panic" onclick="togglePanic()">
+                    <i data-lucide="alert-triangle" style="width: 18px; height: 18px;"></i>
+                    <span id="panic-text">EMERGENCY STOP</span>
+                </button>
+            </div>
+        </header>
 
-            const fetchData = async () => {
-                try {
-                    const resp = await fetch('/api/status');
-                    const json = await resp.json();
-                    if (json.ok) {
-                        setData({
-                            price: json.ticker.price,
-                            balance: json.wallet.balance,
-                            avail: json.wallet.available,
-                            todayPnl: json.today.pnl,
-                            target: json.today.target || 5.0,
-                            panicMode: json.panic_mode,
-                            mode: json.mode,
-                            symbol: json.symbol,
-                            timeframe: json.timeframe,
-                            leverage: json.leverage,
-                            trades: json.recent_trades,
-                            logs: json.recent_logs,
-                            position: json.position
-                        });
-                    }
-                    setLoading(false);
-                } catch (e) {
-                    console.error("Fetch error:", e);
-                }
-            };
+        <!-- KPI Grid -->
+        <div class="grid-kpi">
+            <div class="card">
+                <div class="card-header">
+                    <i data-lucide="activity"></i>
+                    <span id="ui-symbol">BTCUSD</span> Live Price
+                </div>
+                <div class="kpi-val" id="ui-price">$0.00</div>
+                <div class="kpi-sub">
+                    <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+                    Last updated: <span id="ui-last-update">Just now</span>
+                </div>
+            </div>
 
-            useEffect(() => {
-                fetchData();
-                const interval = setInterval(fetchData, 5000); // 5 sec update
-                return () => clearInterval(interval);
-            }, []);
+            <div class="card">
+                <div class="card-header">
+                    <i data-lucide="wallet"></i>
+                    Available Capital
+                </div>
+                <div class="kpi-val" id="ui-balance">$0.00</div>
+                <div class="kpi-sub" style="color: var(--accent-primary);">
+                    <i data-lucide="shield" style="width: 14px; height: 14px;"></i>
+                    Risk: $10 / Trade
+                </div>
+            </div>
 
-            const handleSync = async () => {
-                setIsSyncing(true);
-                try {
-                    const resp = await fetch('/api/refresh', { method: 'POST' });
-                    await resp.json();
-                    await fetchData();
-                } catch (e) { console.error(e); }
-                setTimeout(() => setIsSyncing(false), 1000);
-            };
+            <div class="card">
+                <div class="card-header">
+                    <i data-lucide="target"></i>
+                    Active Position
+                </div>
+                <div class="kpi-val" id="ui-pos-size">NO POSITION</div>
+                <div class="kpi-sub" id="ui-pos-pnl">
+                    Scanning for entry...
+                </div>
+            </div>
 
-            const togglePanic = async () => {
-                try {
-                    const resp = await fetch('/api/panic', { method: 'POST' });
-                    const json = await resp.json();
-                    setData(prev => ({ ...prev, panicMode: json.panic_mode }));
-                } catch (e) { console.error(e); }
-            };
+            <div class="card">
+                <div class="card-header">
+                    <i data-lucide="calendar"></i>
+                    Today's Performance
+                </div>
+                <div class="kpi-val" id="ui-today-pnl">$0.00</div>
+                <div class="kpi-sub">
+                    <span id="ui-today-trades">0</span> Trades (<span id="ui-today-wins" class="color-up">0</span>W - <span id="ui-today-losses" class="color-down">0</span>L)
+                </div>
+            </div>
+        </div>
 
-            const progressPercent = Math.min((data.todayPnl / data.target) * 100, 100);
-            const panicActive = data.panicMode;
-
-            if (loading) {
-                return (
-                    <div className="min-h-screen flex items-center justify-center bg-[#020408]">
-                        <div className="flex flex-col items-center gap-4">
-                            <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
-                            <p className="text-slate-500 font-bold tracking-widest text-xs">SYNCHRONIZING ENGINE...</p>
-                        </div>
+        <!-- Main Content -->
+        <div class="grid-main">
+            <!-- Left Column -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                
+                <div class="card">
+                    <div class="card-header">
+                        <i data-lucide="history"></i>
+                        Recent Executions
                     </div>
-                );
-            }
-
-            return (
-                <div className={`min-h-screen ${panicActive ? 'bg-red-950/10' : 'bg-[#020408]'} text-slate-300 font-sans transition-colors duration-500`}>
-                    
-                    {/* Sidebar */}
-                    <nav className="fixed left-0 top-0 h-full w-16 bg-[#0c1017]/80 border-r border-white/5 flex flex-col items-center py-8 gap-8 z-[60] backdrop-blur-xl">
-                        <div className="p-2 bg-indigo-500 rounded-lg shadow-[0_0_15px_rgba(99,102,241,0.5)] cursor-pointer hover:scale-110 transition-transform">
-                            <Zap className="w-6 h-6 text-white" />
-                        </div>
-                        
-                        <button 
-                            onClick={() => setActiveTab('dashboard')}
-                            className={`p-2 rounded-xl transition-all ${activeTab === 'dashboard' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'text-slate-600 hover:text-slate-400'}`}
-                        >
-                            <LayoutDashboard className="w-6 h-6" />
-                        </button>
-
-                        <button 
-                            onClick={() => setActiveTab('history')}
-                            className={`p-2 rounded-xl transition-all ${activeTab === 'history' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'text-slate-600 hover:text-slate-400'}`}
-                        >
-                            <History className="w-6 h-6" />
-                        </button>
-
-                        <button 
-                            onClick={() => setActiveTab('settings')}
-                            className={`p-2 rounded-xl transition-all ${activeTab === 'settings' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'text-slate-600 hover:text-slate-400'}`}
-                        >
-                            <Settings2 className="w-6 h-6" />
-                        </button>
-
-                        <div className="mt-auto pb-4">
-                            <button 
-                                onClick={togglePanic}
-                                className={`p-2 rounded-full transition-all ${panicActive ? 'bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)]' : 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20'}`}
-                            >
-                                <Power className="w-6 h-6" />
-                            </button>
-                        </div>
-                    </nav>
-
-                    <div className="pl-16">
-                        {/* Header */}
-                        <header className="border-b border-white/5 bg-[#0c1017]/30 backdrop-blur-xl sticky top-0 z-50">
-                            <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-                                <div className="flex items-center gap-4">
-                                    <div className="relative">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border transition-colors ${panicActive ? 'bg-red-500/20 border-red-500/40' : 'bg-indigo-500/10 border-indigo-500/20'}`}>
-                                            <Cpu className={`w-5 h-5 ${panicActive ? 'text-red-400' : 'text-indigo-400'}`} />
-                                        </div>
-                                        <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-4 border-[#020408] ${panicActive ? 'bg-red-500' : 'bg-emerald-500 animate-pulse'}`}></div>
-                                    </div>
-                                    <div>
-                                        <h1 className="text-xl font-black tracking-widest text-white italic">
-                                            SNIPER <span className="text-indigo-500 underline decoration-indigo-500/50 underline-offset-4 uppercase">V6 PRO</span>
-                                        </h1>
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
-                                            {panicActive ? 'SYSTEM FROZEN • EMERGENCY MODE' : `Delta Engine Active • ${data.symbol} • ${data.timeframe}`}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-6">
-                                    <div className="flex flex-col items-end group">
-                                        <span className={`text-[10px] font-black px-3 py-1 rounded border mb-1 transition-all ${data.mode === 'production' ? 'bg-emerald-500 text-black border-emerald-500' : 'bg-amber-500/10 border-amber-500/50 text-amber-400'}`}>
-                                            {data.mode.toUpperCase()} MODE
-                                        </span>
-                                        <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
-                                            <Clock className="w-3 h-3" />
-                                            {new Date().toLocaleTimeString()}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </header>
-
-                        {/* Main Content */}
-                        <main className="max-w-7xl mx-auto p-6">
-                            {activeTab === 'dashboard' && (
-                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                                    
-                                    {/* Metrics */}
-                                    <div className="lg:col-span-3 bg-[#0c1017] border border-white/5 rounded-2xl p-6 group cursor-default hover:border-indigo-500/30 transition-colors">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <Activity className="w-5 h-5 text-indigo-400" />
-                                            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">{data.symbol}</span>
-                                        </div>
-                                        <p className="text-slate-500 text-xs font-bold uppercase mb-1">Market Price</p>
-                                        <h2 className="text-3xl font-black text-white tabular-nums tracking-tighter">
-                                            ${data.price.toLocaleString(undefined, {minimumFractionDigits: 1})}
-                                        </h2>
-                                        <Sparkline color={panicActive ? "#f43f5e" : "#6366f1"} />
-                                    </div>
-
-                                    <div className="lg:col-span-3 bg-[#0c1017] border border-white/5 rounded-2xl p-6 hover:border-amber-500/30 transition-colors">
-                                        <div className="p-2 bg-amber-500/10 rounded-lg w-fit mb-4">
-                                            <Wallet className="w-5 h-5 text-amber-400" />
-                                        </div>
-                                        <p className="text-slate-500 text-xs font-bold uppercase mb-1">Wallet Margin</p>
-                                        <h2 className="text-3xl font-black text-white tabular-nums tracking-tighter">
-                                            ${data.balance.toFixed(2)}
-                                        </h2>
-                                        <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center text-[10px] font-black uppercase">
-                                            <span className="text-slate-500">Available</span>
-                                            <span className="text-amber-400">${data.avail.toFixed(2)}</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="lg:col-span-6 bg-[#0c1017] border border-white/5 rounded-2xl p-6 relative overflow-hidden group">
-                                        <div className="flex justify-between items-end mb-4">
-                                            <div>
-                                                <p className="text-slate-500 text-xs font-bold uppercase mb-1">Profit Target Growth</p>
-                                                <div className="flex items-center gap-3">
-                                                    <h2 className={`text-4xl font-black ${data.todayPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                                        {data.todayPnl >= 0 ? '+' : ''}${data.todayPnl.toFixed(4)}
-                                                    </h2>
-                                                    <div className="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded text-xs font-bold">
-                                                        Today
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase">Daily Goal (Drawdown)</p>
-                                                <p className="text-indigo-400 text-xl font-black">{progressPercent.toFixed(1)}%</p>
-                                            </div>
-                                        </div>
-                                        <div className="h-4 bg-slate-900 rounded-full border border-white/5 p-1">
-                                            <div 
-                                                className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-1000 shadow-[0_0_20px_rgba(99,102,241,0.3)]"
-                                                style={{ width: `${progressPercent}%` }}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Terminal Controls */}
-                                    <div className="lg:col-span-4 bg-[#0c1017] border border-white/5 rounded-2xl p-6">
-                                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-2">
-                                            <ShieldCheck className="w-4 h-4 text-indigo-400" />
-                                            Terminal Controls
-                                        </h3>
-                                        <div className="grid grid-cols-1 gap-4 mb-6">
-                                            <button 
-                                                onClick={togglePanic}
-                                                className={`flex items-center justify-between p-4 rounded-xl border transition-all ${panicActive ? 'bg-red-500 border-red-400 text-white' : 'bg-rose-500/5 border-rose-500/20 text-rose-500 hover:bg-rose-500/10'}`}
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <ShieldAlert className="w-6 h-6" />
-                                                    <span className="text-xs font-black uppercase">{panicActive ? 'Release System' : 'Panic Stop'}</span>
-                                                </div>
-                                                {panicActive && <AlertCircle className="w-4 h-4 animate-bounce" />}
-                                            </button>
-                                            
-                                            <button 
-                                                onClick={handleSync}
-                                                disabled={isSyncing || panicActive}
-                                                className={`flex items-center justify-between p-4 rounded-xl border transition-all ${isSyncing ? 'bg-indigo-500/40 border-indigo-500 text-white' : 'bg-indigo-500/5 border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/10'} ${panicActive && 'opacity-30 cursor-not-allowed'}`}
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <RefreshCw className={`w-6 h-6 ${isSyncing ? 'animate-spin' : ''}`} />
-                                                    <span className="text-xs font-black uppercase">{isSyncing ? 'Syncing...' : 'Force API Sync'}</span>
-                                                </div>
-                                            </button>
-                                        </div>
-                                        
-                                        <div className="p-4 bg-white/[0.02] rounded-xl border border-white/5 flex items-center justify-between">
-                                            <span className="text-[10px] font-black text-slate-500 uppercase">Bot Intelligence</span>
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black border ${panicActive ? 'bg-red-500/20 border-red-500 text-red-500' : 'bg-emerald-500/10 border-emerald-500 text-emerald-500'}`}>
-                                                {panicActive ? 'OFFLINE' : 'OPTIMIZED'}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Trade Engine */}
-                                    <div className="lg:col-span-8 bg-[#0c1017] border border-white/5 rounded-2xl p-6">
-                                        <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
-                                            <h3 className="font-bold flex items-center gap-2">
-                                                <BarChart3 className="w-5 h-5 text-indigo-400" />
-                                                Live Decision Engine
-                                            </h3>
-                                            <div className="flex items-center gap-3">
-                                                <span className={`text-[10px] font-black px-2 py-0.5 rounded ${data.position?.active ? 'bg-emerald-500/20 text-emerald-500' : 'bg-indigo-500/20 text-indigo-400'}`}>
-                                                    {data.position?.active ? 'POSITION OPEN' : 'SCANNING MARKET'}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div className="overflow-hidden rounded-xl border border-white/5">
-                                            <table className="w-full text-left text-sm">
-                                                <thead className="bg-white/[0.03] text-slate-500 uppercase text-[10px] tracking-widest font-bold">
-                                                    <tr>
-                                                        <th className="px-4 py-3">Trade Detail</th>
-                                                        <th className="px-4 py-3">Price Action</th>
-                                                        <th className="px-4 py-3">Net P&L</th>
-                                                        <th className="px-4 py-3 text-right">Result</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-white/5">
-                                                    {data.trades.length > 0 ? data.trades.map((trade) => (
-                                                        <tr key={trade.id} className="hover:bg-white/[0.02] transition-colors group cursor-pointer">
-                                                            <td className="px-4 py-4">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className={`p-1.5 rounded ${trade.side === 'BUY' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
-                                                                        {trade.side === 'BUY' ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="font-bold text-white text-xs">BTC Perpetual</p>
-                                                                        <p className="text-[10px] text-slate-500 font-bold uppercase">{trade.entry_time?.substring(11, 16)} UTC</p>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-4 py-4 tabular-nums text-xs font-bold text-slate-300">
-                                                                ${trade.entry_price?.toLocaleString()} → {trade.exit_price ? `$${trade.exit_price.toLocaleString()}` : 'OPEN'}
-                                                            </td>
-                                                            <td className={`px-4 py-4 tabular-nums font-black text-sm ${trade.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                                                {trade.pnl >= 0 ? `+$${trade.pnl.toFixed(4)}` : `-$${Math.abs(trade.pnl).toFixed(4)}`}
-                                                            </td>
-                                                            <td className="px-4 py-4 text-right">
-                                                                <span className={`px-2 py-1 rounded text-[10px] font-black border ${trade.status === 'CLOSED' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
-                                                                    {trade.status}
-                                                                </span>
-                                                            </td>
-                                                        </tr>
-                                                    )) : (
-                                                        <tr>
-                                                            <td colSpan="4" className="px-4 py-12 text-center text-slate-600 text-xs font-bold uppercase tracking-widest italic">
-                                                                No recent trade activity found.
-                                                            </td>
-                                                        </tr>
-                                                    )}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-
-                                    {/* Terminal Logs */}
-                                    <div className="lg:col-span-12 bg-black border border-white/5 rounded-2xl overflow-hidden h-[250px] flex flex-col shadow-2xl">
-                                        <div className="px-6 py-2 border-b border-white/5 bg-[#0c1017] flex justify-between items-center">
-                                            <div className="flex items-center gap-2">
-                                                <Terminal className="w-4 h-4 text-indigo-400" />
-                                                <span className="text-[10px] font-black uppercase tracking-[0.3em]">System Intelligence Logs</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
-                                                LIVE FEED
-                                            </div>
-                                        </div>
-                                        <div className="p-6 font-mono text-[11px] overflow-y-auto space-y-1 bg-[#020408]/50 flex-grow scrollbar-thin scrollbar-thumb-white/5">
-                                            {data.logs.map((log, i) => (
-                                                <div key={i} className="flex gap-3 group">
-                                                    <span className="text-slate-600 font-bold shrink-0">[{log.timestamp?.substring(11, 19)}]</span>
-                                                    <span className={`uppercase font-black px-1 rounded-sm shrink-0 text-indigo-400`}>
-                                                        {log.event_type}
-                                                    </span>
-                                                    <span className="text-slate-400 group-hover:text-slate-200 transition-colors">{log.message}</span>
-                                                </div>
-                                            ))}
-                                            {!panicActive && (
-                                                <div className="flex gap-3 animate-pulse">
-                                                    <span className="text-slate-600 font-bold">[{new Date().toLocaleTimeString()}]</span>
-                                                    <span className="text-indigo-400 font-black">SCANNING</span>
-                                                    <span className="text-indigo-400 italic">Processing real-time orderbook depth...</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeTab === 'history' && (
-                                <div className="animate-in slide-in-from-bottom-4 duration-500">
-                                    <div className="bg-[#0c1017] border border-white/5 rounded-2xl p-8 text-center">
-                                        <History className="w-16 h-16 text-slate-700 mx-auto mb-4" />
-                                        <h2 className="text-xl font-black text-white uppercase tracking-widest">Trade Archives</h2>
-                                        <p className="text-slate-500 mt-2">Accessing Supabase Trade History...</p>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                                            <div className="p-6 bg-white/[0.02] border border-white/5 rounded-2xl">
-                                                <p className="text-slate-500 text-xs font-bold uppercase">Total Trades</p>
-                                                <p className="text-3xl font-black text-emerald-400 mt-2">{data.trades.length}</p>
-                                            </div>
-                                            <div className="p-6 bg-white/[0.02] border border-white/5 rounded-2xl">
-                                                <p className="text-slate-500 text-xs font-bold uppercase">System Status</p>
-                                                <p className="text-3xl font-black text-indigo-400 mt-2">ACTIVE</p>
-                                            </div>
-                                            <div className="p-6 bg-white/[0.02] border border-white/5 rounded-2xl">
-                                                <p className="text-slate-500 text-xs font-bold uppercase">Mode</p>
-                                                <p className="text-3xl font-black text-amber-400 mt-2">{data.mode.toUpperCase()}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeTab === 'settings' && (
-                                <div className="animate-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto">
-                                    <div className="bg-[#0c1017] border border-white/5 rounded-2xl p-8">
-                                        <h2 className="text-xl font-black text-white uppercase tracking-widest mb-8 flex items-center gap-3">
-                                            <Settings2 className="w-6 h-6 text-indigo-400" />
-                                            Bot Configuration
-                                        </h2>
-                                        <div className="space-y-6">
-                                            <div className="flex items-center justify-between p-4 bg-white/[0.02] rounded-xl border border-white/5">
-                                                <div>
-                                                    <p className="text-sm font-bold text-white">Execution Engine</p>
-                                                    <p className="text-[10px] text-slate-500 font-bold uppercase">{data.symbol} Perpetual</p>
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <span className="px-3 py-1 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded text-[10px] font-black uppercase">
-                                                        {data.timeframe} TF
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center justify-between p-4 bg-white/[0.02] rounded-xl border border-white/5">
-                                                <div>
-                                                    <p className="text-sm font-bold text-white">System Mode</p>
-                                                    <p className="text-[10px] text-slate-500 font-bold uppercase">Current: {data.mode}</p>
-                                                </div>
-                                                <span className={`px-3 py-1 rounded text-[10px] font-black border ${data.mode === 'production' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-500' : 'bg-amber-500/10 border-amber-500 text-amber-400'}`}>
-                                                    {data.mode.toUpperCase()}
-                                                </span>
-                                            </div>
-                                            <p className="text-center text-[10px] text-slate-600 font-bold uppercase italic mt-8">
-                                                Settings are managed via .env and config.py for maximum security.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </main>
-
-                        <footer className="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] text-slate-600 font-black tracking-[0.2em] uppercase border-t border-white/5 mt-8">
-                            <p>© 2026 BTC ELITE SNIPER V6.PRO • AUTOMATED BY ANTIGRAVITY</p>
-                            <div className="flex gap-8">
-                                <span className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                    DATABASE: ONLINE
-                                </span>
-                                <span className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                    NODE: {data.mode.toUpperCase()}
-                                </span>
-                            </div>
-                        </footer>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Side</th>
+                                    <th>Entry</th>
+                                    <th>Exit</th>
+                                    <th>P&L</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ui-trades-body">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: var(--text-muted);">No recent trades</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            );
-        };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+                <div class="card">
+                    <div class="card-header">
+                        <i data-lucide="terminal"></i>
+                        System Logs
+                    </div>
+                    <div class="terminal" id="ui-logs-body">
+                        <div class="log-line">
+                            <span class="log-time">System</span>
+                            <span class="log-type" style="color: var(--text-muted)">INFO</span>
+                            <span class="log-msg">Connecting to data stream...</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                
+                <div class="card">
+                    <div class="card-header">
+                        <i data-lucide="settings-2"></i>
+                        Strategy Parameters
+                    </div>
+                    <ul class="detail-list">
+                        <li class="detail-item">
+                            <span class="detail-label">Asset</span>
+                            <span class="detail-val" id="param-symbol">BTCUSD</span>
+                        </li>
+                        <li class="detail-item">
+                            <span class="detail-label">Timeframe</span>
+                            <span class="detail-val" id="param-tf">5m</span>
+                        </li>
+                        <li class="detail-item">
+                            <span class="detail-label">Direction</span>
+                            <span class="detail-val color-up">LONG ONLY</span>
+                        </li>
+                        <li class="detail-item">
+                            <span class="detail-label">Leverage</span>
+                            <span class="detail-val" id="param-lev">10x Isolated</span>
+                        </li>
+                        <li class="detail-item">
+                            <span class="detail-label">Pyramiding</span>
+                            <span class="detail-val">Strictly 1</span>
+                        </li>
+                        <li class="detail-item">
+                            <span class="detail-label">Order Type</span>
+                            <span class="detail-val" style="color: var(--accent-primary);">LIMIT ONLY</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <i data-lucide="shield-alert"></i>
+                        Risk Constraints
+                    </div>
+                    <ul class="detail-list">
+                        <li class="detail-item">
+                            <span class="detail-label">Capital / Trade</span>
+                            <span class="detail-val">$10.00</span>
+                        </li>
+                        <li class="detail-item">
+                            <span class="detail-label">Hard Stop-Loss</span>
+                            <span class="detail-val color-down">-8.0%</span>
+                        </li>
+                        <li class="detail-item">
+                            <span class="detail-label">Order Timeout</span>
+                            <span class="detail-val">15 Minutes</span>
+                        </li>
+                        <li class="detail-item">
+                            <span class="detail-label">Daily Drawdown</span>
+                            <span class="detail-val color-down">-30% (24h Lock)</span>
+                        </li>
+                        <li class="detail-item" style="margin-top: 0.5rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <span class="detail-label">Daily Start Eq</span>
+                            <span class="detail-val" id="param-start-bal">$0.00</span>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Clock Update
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('ui-clock').textContent = now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+        }, 1000);
+
+        // Fetch Data
+        async function fetchStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                if (data.ok) {
+                    updateUI(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch API:", err);
+            }
+        }
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+        }
+
+        function formatTime(isoStr) {
+            if (!isoStr) return '-';
+            const d = new Date(isoStr);
+            return d.toISOString().substring(11, 16); // HH:MM
+        }
+
+        function updateUI(data) {
+            // Header
+            document.getElementById('ui-strategy').textContent = data.strategy;
+            
+            const badge = document.getElementById('ui-mode-badge');
+            badge.className = `badge ${data.mode}`;
+            badge.innerHTML = `<div class="pulse-dot"></div>${data.mode.toUpperCase()}`;
+
+            const lockBadge = document.getElementById('ui-lock-badge');
+            lockBadge.style.display = data.bot_state.is_locked ? 'flex' : 'none';
+
+            const panicBtn = document.getElementById('btn-panic');
+            if (data.panic_mode) {
+                panicBtn.classList.add('active');
+                document.getElementById('panic-text').textContent = "PANIC ACTIVE - UNLOCK";
+            } else {
+                panicBtn.classList.remove('active');
+                document.getElementById('panic-text').textContent = "EMERGENCY STOP";
+            }
+
+            // KPIs
+            document.getElementById('ui-symbol').textContent = data.symbol;
+            document.getElementById('ui-price').textContent = formatCurrency(data.ticker.price);
+            document.getElementById('ui-balance').textContent = formatCurrency(data.wallet.balance);
+            
+            const pos = data.position;
+            const posEl = document.getElementById('ui-pos-size');
+            const posPnlEl = document.getElementById('ui-pos-pnl');
+            
+            if (pos.active) {
+                posEl.textContent = `${pos.side.toUpperCase()} ${pos.size}x`;
+                posEl.className = 'kpi-val color-up';
+                
+                const pnl = parseFloat(pos.pnl);
+                const colorClass = pnl >= 0 ? 'color-up' : 'color-down';
+                const sign = pnl >= 0 ? '+' : '';
+                posPnlEl.innerHTML = `Entry: ${formatCurrency(pos.entry_price)} &nbsp;|&nbsp; <span class="${colorClass}">Unrealized: ${sign}${formatCurrency(pnl)}</span>`;
+            } else {
+                posEl.textContent = "NO POSITION";
+                posEl.className = 'kpi-val color-neutral';
+                posPnlEl.innerHTML = "Scanning for entry conditions...";
+            }
+
+            // Today PnL
+            const todayPnl = parseFloat(data.today.pnl);
+            const todayEl = document.getElementById('ui-today-pnl');
+            todayEl.textContent = formatCurrency(todayPnl);
+            todayEl.className = `kpi-val ${todayPnl > 0 ? 'color-up' : (todayPnl < 0 ? 'color-down' : 'color-neutral')}`;
+            
+            document.getElementById('ui-today-trades').textContent = data.today.total_trades;
+            document.getElementById('ui-today-wins').textContent = data.today.wins;
+            document.getElementById('ui-today-losses').textContent = data.today.losses;
+
+            // Strategy Params
+            document.getElementById('param-symbol').textContent = data.symbol;
+            document.getElementById('param-tf').textContent = data.timeframe;
+            document.getElementById('param-lev').textContent = `${data.leverage}x Isolated`;
+            document.getElementById('param-start-bal').textContent = formatCurrency(data.bot_state.daily_start_balance);
+
+            // Trades Table
+            const tbody = document.getElementById('ui-trades-body');
+            if (data.recent_trades && data.recent_trades.length > 0) {
+                tbody.innerHTML = '';
+                data.recent_trades.forEach(t => {
+                    const tr = document.createElement('tr');
+                    const isProfit = t.pnl >= 0;
+                    const pnlClass = isProfit ? 'color-up' : 'color-down';
+                    const sign = isProfit ? '+' : '';
+                    
+                    tr.innerHTML = `
+                        <td>${formatTime(t.entry_time)}</td>
+                        <td class="color-up">${t.side}</td>
+                        <td>${formatCurrency(t.entry_price)}</td>
+                        <td>${t.exit_price ? formatCurrency(t.exit_price) : '-'}</td>
+                        <td class="${t.status === 'CLOSED' ? pnlClass : ''}">
+                            ${t.status === 'CLOSED' ? `${sign}${formatCurrency(t.pnl)} (${(t.pnl_pct*100).toFixed(2)}%)` : '-'}
+                        </td>
+                        <td>
+                            <span style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1)">
+                                ${t.status}
+                            </span>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // Logs
+            const logsEl = document.getElementById('ui-logs-body');
+            if (data.recent_logs && data.recent_logs.length > 0) {
+                const isScrolledToBottom = logsEl.scrollHeight - logsEl.clientHeight <= logsEl.scrollTop + 10;
+                
+                logsEl.innerHTML = '';
+                data.recent_logs.slice().reverse().forEach(l => {
+                    const div = document.createElement('div');
+                    div.className = 'log-line';
+                    div.innerHTML = `
+                        <span class="log-time">${formatTime(l.timestamp)}</span>
+                        <span class="log-type ${l.event_type}">${l.event_type}</span>
+                        <span class="log-msg">${l.message}</span>
+                    `;
+                    logsEl.appendChild(div);
+                });
+
+                if (isScrolledToBottom) {
+                    logsEl.scrollTop = logsEl.scrollHeight;
+                }
+            }
+        }
+
+        async function togglePanic() {
+            if(!confirm("Are you sure you want to toggle EMERGENCY STOP? This will freeze the bot immediately.")) return;
+            
+            try {
+                await fetch('/api/panic', { method: 'POST' });
+                fetchStatus();
+            } catch(e) {
+                alert("Failed to toggle panic mode.");
+            }
+        }
+
+        // Auto Refresh
+        fetchStatus();
+        setInterval(fetchStatus, 3000); // 3 second update
     </script>
 </body>
 </html>
