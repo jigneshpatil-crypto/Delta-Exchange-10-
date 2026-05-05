@@ -16,6 +16,11 @@ venv/
 
 # Test scripts
 _test_*.py
+test_*.py
+
+# Data files (too large for git)
+*.csv
+backtest_report.md
 
 # OS
 .DS_Store

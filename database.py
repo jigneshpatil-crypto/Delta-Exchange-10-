@@ -1,5 +1,5 @@
 """
-BTC Global Elite Scalper V6 — Database Layer
+Heikin-Ashi + Chandelier Exit + LSMA Filter — Database Layer
 Supabase PostgreSQL for trade persistence and bot state.
 """
 import json, logging

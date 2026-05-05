@@ -1,5 +1,5 @@
 """
-BTC Global Elite Scalper V6 — Delta Exchange India API Client
+Heikin-Ashi + Chandelier Exit + LSMA Filter — Delta Exchange India API Client
 Direct REST API wrapper with HMAC-SHA256 authentication.
 Supports both Testnet and Production environments.
 """
@@ -26,7 +26,7 @@ class DeltaClient:
         self.session = requests.Session()
         self.session.headers.update({
             "Content-Type": "application/json",
-            "User-Agent": "btc-elite-scalper-v6",
+            "User-Agent": "ha-ce-lsma-bot",
         })
         self._product_id_cache = {}
 

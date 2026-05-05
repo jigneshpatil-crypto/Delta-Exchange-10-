@@ -1,5 +1,5 @@
 """
-BTC Global Elite Scalper V6 — Central Configuration
+Heikin-Ashi + Chandelier Exit + LSMA Filter — Central Configuration
 All strategy parameters, risk settings, and API config in one place.
 """
 
@@ -11,92 +11,91 @@ load_dotenv()
 # ============================================================
 # MODE
 # ============================================================
-MODE = os.getenv("MODE", "testnet")  # "testnet" or "production"
+MODE = os.getenv("MODE", "production")  # "testnet" or "production"
 
 # ============================================================
-# DELTA EXCHANGE API
+# DELTA EXCHANGE API  (DO NOT MODIFY — retained from old setup)
 # ============================================================
 DELTA_API_KEY = os.getenv("DELTA_API_KEY", "").strip()
 DELTA_API_SECRET = os.getenv("DELTA_API_SECRET", "").strip()
-DELTA_BASE_URL = os.getenv("DELTA_BASE_URL", "https://cdn-ind.testnet.deltaex.org").strip()
+DELTA_BASE_URL = os.getenv("DELTA_BASE_URL", "https://api.india.delta.exchange").strip()
 
-# Product symbol for BTC/USD Perpetual Futures (Delta Exchange India)
+# Product symbol — BTC/USD Perpetual Futures (Delta Exchange India uses BTCUSD)
 SYMBOL = "BTCUSD"
 
 # ============================================================
 # STRATEGY PARAMETERS
 # ============================================================
-TIMEFRAME = "3m"               # 3-minute candles
-CANDLE_FETCH_COUNT = 250       # Number of candles to fetch for indicator calculation
-POLL_INTERVAL_SECONDS = 60     # Check every 1 minute for new 3m candle closes
+STRATEGY_NAME = "Heikin-Ashi + Chandelier Exit + LSMA Filter"
+TIMEFRAME = "5m"                # 5-minute candles
+CANDLE_FETCH_COUNT = 300        # Number of candles to fetch for indicator warmup
+POLL_INTERVAL_SECONDS = 30      # Check every 30s for new 5m candle closes
 
-# --- UT Bot Alerts ---
-UT_BOT_KEY_VALUE = 2.0         # Sensitivity multiplier
-UT_BOT_ATR_PERIOD = 10         # ATR lookback period
+# --- Trade Direction ---
+TRADE_DIRECTION = "LONG"        # LONG only. Do NOT take Short trades.
 
-# --- Schaff Trend Cycle (STC) ---
-STC_CYCLE_LENGTH = 12          # Cycle length
-STC_FAST_LENGTH = 26           # Fast EMA period
-STC_SLOW_LENGTH = 50           # Slow EMA period
+# --- Chandelier Exit ---
+CE_ATR_PERIOD = 22              # ATR lookback period for Chandelier Exit
+CE_ATR_MULTIPLIER = 3.0         # ATR multiplier
 
-# --- EMA Trend Filter ---
-EMA_PERIOD = 200               # 200-period EMA for trend direction
+# --- LSMA (Least Squares Moving Average) ---
+LSMA_PERIOD = 25                # LSMA lookback period
+
+# --- Heikin-Ashi ---
+# Calculated from raw OHLCV — no config needed
 
 # ============================================================
-# ENTRY CONDITIONS
+# ENTRY / EXIT CONDITIONS
 # ============================================================
-# LONG:  Price > EMA200 AND UT Bot BUY AND STC > 25
-# SHORT: Price < EMA200 AND UT Bot SELL AND STC < 75
-STC_LONG_THRESHOLD = 25
-STC_SHORT_THRESHOLD = 75
+# ENTRY (Buy/Long):
+#   Chandelier Exit flips to GREEN (bullish)
+#   AND Close Price > LSMA 25
+#
+# EXIT (Sell/Close Long):
+#   Heikin-Ashi candle turns RED
+#   AND Close Price < LSMA 25
+
+# ============================================================
+# ORDER EXECUTION — LIMIT ORDERS ONLY
+# ============================================================
+ORDER_TYPE = "limit_order"       # NO MARKET ORDERS ALLOWED
+LIMIT_BUFFER_PCT = 0.0005       # 0.05% buffer on limit price for fill assurance
+ORDER_TIMEOUT_MINUTES = 15      # Cancel unfilled entry order after 15 min (3x 5m candles)
+ORDER_TIMEOUT_SECONDS = ORDER_TIMEOUT_MINUTES * 60  # 900 seconds
 
 # ============================================================
 # RISK MANAGEMENT
 # ============================================================
-LEVERAGE = 10                  # 10x leverage
-MARGIN_PERCENT = 0.15          # Use 15% of balance as margin
-MAX_DAILY_DRAWDOWN = 0.05      # Lock bot if 5% daily loss
-DAILY_LOCK_HOURS = 24          # Lock duration after hitting drawdown
+LEVERAGE = 10                   # 10x Isolated leverage
+CAPITAL_PER_TRADE = 10.0        # $10 per trade (100% of small balance)
+PYRAMIDING = 1                  # STRICTLY 1 — no multiple positions at the same time
+HARD_STOP_LOSS_PCT = 0.08       # 8% hard SL below entry (emergency liquidation protection)
+
+# ============================================================
+# DAILY DRAWDOWN PROTECTION
+# ============================================================
+MAX_DAILY_DRAWDOWN = 0.30       # 30% daily loss limit (e.g., $3 on $10 account)
+DAILY_LOCK_HOURS = 24           # Pause bot for 24 hours after hitting drawdown
 
 # ============================================================
 # SAFETY FILTERS
 # ============================================================
-SPREAD_THRESHOLD_PCT = 0.0005  # Max spread: 0.05%
-TIMEOUT_MINUTES = 45           # Close trade if stuck for 45 min
-MAX_ACTIVE_TRADES = 1          # Only 1 trade at a time
-MAX_TRADES_PER_DAY = 3         # Stop trading after 3 trades in a day
-BREAKEVEN_TRIGGER_PCT = 0.005  # Move SL to entry at 0.5% profit
-NEWS_BUFFER_MINUTES = 30       # Pause 30 min before/after high-impact news
+SPREAD_THRESHOLD_PCT = 0.001    # Max spread: 0.1% (relaxed for 5m)
+MAX_ACTIVE_TRADES = 1           # Only 1 trade at a time (pyramiding = 1)
 
 # ============================================================
-# EXECUTION
-# ============================================================
-CHASE_WAIT_SECONDS = 5         # Wait before re-pricing limit order
-CHASE_MAX_ATTEMPTS = 3         # Max price chase attempts
-CHASE_TICK_OFFSET = 1          # Move price by 1 tick when chasing
-
-# ============================================================
-# PARTIAL TAKE PROFIT & TRAILING STOP
-# ============================================================
-PARTIAL_TP_PCT = 0.01          # Close 50% at 1% profit
-PARTIAL_TP_SIZE_RATIO = 0.5    # Close this fraction of position
-FULL_TP_PCT = 0.02             # Target 2% for remaining 50%
-TRAILING_SL_ACTIVATION = 0.01  # Activate trailing SL at 1% profit
-TRAILING_SL_OFFSET_PCT = 0.005 # Trail by 0.5% from peak
-
-# ============================================================
-# TELEGRAM
+# TELEGRAM  (DO NOT MODIFY — retained from old setup)
 # ============================================================
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
 # ============================================================
-# DATABASE (Supabase PostgreSQL)
+# DATABASE (Supabase PostgreSQL)  (DO NOT MODIFY — retained)
 # ============================================================
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 
 # ============================================================
-# FINNHUB (News Calendar)
+# FINNHUB (News Calendar)  (DO NOT MODIFY — retained)
 # ============================================================
 FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY", "")
 
@@ -112,14 +111,14 @@ HIGH_IMPACT_EVENTS = [
 ]
 
 # ============================================================
-# RENDER / DEPLOYMENT
+# RENDER / DEPLOYMENT  (DO NOT MODIFY — retained)
 # ============================================================
 RENDER_APP_URL = os.getenv("RENDER_APP_URL", "")
-KEEP_ALIVE_INTERVAL = 300      # Ping self every 5 minutes
+KEEP_ALIVE_INTERVAL = 300       # Ping self every 5 minutes
 FLASK_PORT = int(os.getenv("PORT", 5000))
 
 # ============================================================
 # LOGGING
 # ============================================================
 LOG_LEVEL = "INFO"
-MAX_LOG_ENTRIES = 500          # Keep last 500 log entries in memory for dashboard
+MAX_LOG_ENTRIES = 500           # Keep last 500 log entries in memory for dashboard

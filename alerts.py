@@ -1,5 +1,5 @@
 """
-BTC Global Elite Scalper V6 — Professional Telegram Alert System
+Heikin-Ashi + Chandelier Exit + LSMA Filter — Professional Telegram Alert System
 Premium formatted notifications for all bot events.
 """
 
@@ -57,25 +57,29 @@ class AlertSystem:
     def send_startup_alert(self, wallet_balance=0, product_id=None):
         """Send professional startup message when bot deploys."""
         self._send(
-            f"{'='*28}\n"
-            f"<b>BTC GLOBAL ELITE SCALPER V6</b>\n"
-            f"{'='*28}\n\n"
-            f"<b>STATUS:</b> ONLINE\n"
+            f"{'='*32}\n"
+            f"<b>HA + CHANDELIER EXIT + LSMA BOT</b>\n"
+            f"{'='*32}\n\n"
+            f"<b>STATUS:</b> ONLINE ✅\n"
             f"<b>MODE:</b> {config.MODE.upper()}\n\n"
-            f"<b>CONFIGURATION</b>\n"
+            f"<b>STRATEGY</b>\n"
+            f"<b>Name:</b> {config.STRATEGY_NAME}\n"
             f"<b>Symbol:</b> {config.SYMBOL}\n"
             f"<b>Timeframe:</b> {config.TIMEFRAME}\n"
-            f"<b>Leverage:</b> {config.LEVERAGE}x\n"
-            f"<b>Margin:</b> {config.MARGIN_PERCENT*100:.0f}%\n\n"
-            f"<b>STRATEGY</b>\n"
-            f"<b>UT Bot:</b> ATR({config.UT_BOT_ATR_PERIOD}) x {config.UT_BOT_KEY_VALUE}\n"
-            f"<b>STC:</b> Cycle({config.STC_CYCLE_LENGTH})\n"
-            f"<b>Trend:</b> EMA {config.EMA_PERIOD}\n\n"
+            f"<b>Direction:</b> {config.TRADE_DIRECTION} ONLY\n"
+            f"<b>Leverage:</b> {config.LEVERAGE}x Isolated\n\n"
+            f"<b>INDICATORS</b>\n"
+            f"<b>Chandelier Exit:</b> ATR({config.CE_ATR_PERIOD}) x {config.CE_ATR_MULTIPLIER}\n"
+            f"<b>LSMA:</b> Period {config.LSMA_PERIOD}\n"
+            f"<b>Heikin-Ashi:</b> Candle color for exit\n\n"
+            f"<b>EXECUTION RULES</b>\n"
+            f"<b>Order Type:</b> LIMIT ONLY (no market orders)\n"
+            f"<b>Entry Timeout:</b> {config.ORDER_TIMEOUT_MINUTES} min auto-cancel\n"
+            f"<b>Hard SL:</b> {config.HARD_STOP_LOSS_PCT*100}% (emergency)\n"
+            f"<b>Pyramiding:</b> {config.PYRAMIDING} (strict)\n\n"
             f"<b>RISK MANAGEMENT</b>\n"
-            f"<b>Max Drawdown:</b> {config.MAX_DAILY_DRAWDOWN*100:.0f}%/day\n"
-            f"<b>Max Active:</b> {config.MAX_ACTIVE_TRADES}\n"
-            f"<b>Daily Limit:</b> {config.MAX_TRADES_PER_DAY} trades\n"
-            f"<b>Timeout:</b> {config.TIMEOUT_MINUTES} min\n\n"
+            f"<b>Capital/Trade:</b> ${config.CAPITAL_PER_TRADE}\n"
+            f"<b>Daily Drawdown:</b> {config.MAX_DAILY_DRAWDOWN*100:.0f}% → 24h pause\n\n"
             f"<b>ACCOUNT</b>\n"
             f"<b>Balance:</b> ${wallet_balance:.2f}\n"
             f"<b>Product ID:</b> {product_id}\n\n"
@@ -92,30 +96,41 @@ class AlertSystem:
         )
 
     # ---------------------------------------------------------------
+    # STRATEGY DEPLOYMENT
+    # ---------------------------------------------------------------
+    def send_deployment_alert(self, old_removed=True, new_deployed=True, sample_result=""):
+        """Deployment confirmation alert."""
+        self._send(
+            f"{'='*32}\n"
+            f"<b>STRATEGY DEPLOYMENT REPORT</b>\n"
+            f"{'='*32}\n\n"
+            f"<b>Old Strategy:</b> {'✅ Removed' if old_removed else '❌ Failed'}\n"
+            f"<b>New Strategy:</b> {'✅ Deployed' if new_deployed else '❌ Failed'}\n"
+            f"<b>Strategy:</b> {config.STRATEGY_NAME}\n\n"
+            f"<b>SAMPLE TRADE:</b>\n"
+            f"{sample_result}\n\n"
+            f"<i>{self._timestamp()}</i>"
+        )
+
+    # ---------------------------------------------------------------
     # TRADE ENTRY
     # ---------------------------------------------------------------
-    def send_entry_alert(self, side, price, size, signal_info=None, attempt=1):
+    def send_entry_alert(self, side, price, size, signal_info=None):
         """Professional trade entry notification."""
-        is_long = side.lower() == "buy"
-        arrow = "LONG" if is_long else "SHORT"
-
-        stc = signal_info.get("stc", 0) if signal_info else 0
-        ema = signal_info.get("ema200", 0) if signal_info else 0
-
         self._send(
-            f"{'='*28}\n"
-            f"<b>NEW {arrow} POSITION OPENED</b>\n"
-            f"{'='*28}\n\n"
-            f"<b>Side:</b> {arrow}\n"
+            f"{'='*32}\n"
+            f"<b>NEW LONG POSITION OPENED</b>\n"
+            f"{'='*32}\n\n"
+            f"<b>Side:</b> LONG (Buy)\n"
             f"<b>Entry Price:</b> ${price:,.2f}\n"
             f"<b>Size:</b> {size} contracts\n"
-            f"<b>Leverage:</b> {config.LEVERAGE}x\n"
-            f"<b>Fill Attempt:</b> {attempt}/{config.CHASE_MAX_ATTEMPTS}\n\n"
-            f"<b>SIGNAL CONFLUENCE</b>\n"
-            f"<b>UT Bot:</b> {'BUY' if is_long else 'SELL'}\n"
-            f"<b>STC:</b> {stc:.1f}\n"
-            f"<b>EMA {config.EMA_PERIOD}:</b> ${ema:,.2f}\n"
-            f"<b>Trend:</b> {'Bullish' if is_long else 'Bearish'}\n\n"
+            f"<b>Leverage:</b> {config.LEVERAGE}x Isolated\n"
+            f"<b>Order Type:</b> LIMIT ✅\n\n"
+            f"<b>SIGNAL</b>\n"
+            f"<b>Chandelier Exit:</b> Flipped GREEN 🟢\n"
+            f"<b>LSMA {config.LSMA_PERIOD}:</b> Close > LSMA\n"
+            f"<b>Hard SL:</b> ${price * (1 - config.HARD_STOP_LOSS_PCT):,.2f} "
+            f"(-{config.HARD_STOP_LOSS_PCT*100}%)\n\n"
             f"<i>{self._timestamp()}</i>"
         )
 
@@ -125,16 +140,16 @@ class AlertSystem:
     def send_exit_alert(self, side, entry_price, exit_price, pnl, pnl_pct, reason):
         """Professional trade exit notification."""
         is_profit = pnl >= 0
-        result = "PROFIT" if is_profit else "LOSS"
+        result = "PROFIT ✅" if is_profit else "LOSS ❌"
 
         self._send(
-            f"{'='*28}\n"
+            f"{'='*32}\n"
             f"<b>POSITION CLOSED — {result}</b>\n"
-            f"{'='*28}\n\n"
+            f"{'='*32}\n\n"
             f"<b>Side:</b> {side.upper()}\n"
             f"<b>Entry:</b> ${entry_price:,.2f}\n"
             f"<b>Exit:</b> ${exit_price:,.2f}\n"
-            f"<b>Move:</b> {abs(exit_price-entry_price):,.2f} pts\n\n"
+            f"<b>Order Type:</b> LIMIT ✅\n\n"
             f"<b>RESULT</b>\n"
             f"<b>P&L:</b> {'+'if is_profit else ''}{pnl_pct*100:.2f}%\n"
             f"<b>USD:</b> {'+'if is_profit else ''}${pnl:.4f}\n"
@@ -143,80 +158,44 @@ class AlertSystem:
         )
 
     # ---------------------------------------------------------------
-    # PARTIAL TAKE PROFIT
+    # HARD STOP-LOSS
     # ---------------------------------------------------------------
-    def send_partial_tp_alert(self, side, entry_price, exit_price, profit_pct):
-        """Partial TP notification."""
+    def send_hard_sl_alert(self, entry_price, sl_price):
+        """Hard stop-loss placed notification."""
         self._send(
-            f"{'='*28}\n"
-            f"<b>PARTIAL TAKE PROFIT (50%)</b>\n"
-            f"{'='*28}\n\n"
-            f"<b>Side:</b> {side.upper()}\n"
+            f"<b>🛡️ HARD STOP-LOSS PLACED</b>\n\n"
             f"<b>Entry:</b> ${entry_price:,.2f}\n"
-            f"<b>TP Hit:</b> ${exit_price:,.2f}\n"
-            f"<b>Locked Profit:</b> +{profit_pct*100:.2f}%\n\n"
-            f"<b>Remaining 50% riding with Trailing SL</b>\n\n"
+            f"<b>SL Price:</b> ${sl_price:,.2f}\n"
+            f"<b>Distance:</b> -{config.HARD_STOP_LOSS_PCT*100}%\n"
+            f"<b>Purpose:</b> Emergency liquidation protection\n\n"
             f"<i>{self._timestamp()}</i>"
         )
 
     # ---------------------------------------------------------------
-    # BREAKEVEN
+    # ORDER TIMEOUT
     # ---------------------------------------------------------------
-    def send_breakeven_alert(self, side, entry_price):
-        """SL moved to breakeven notification."""
+    def send_order_timeout_alert(self, order_type="entry"):
+        """Order timeout/cancel notification."""
         self._send(
-            f"<b>STOP LOSS MOVED TO BREAKEVEN</b>\n\n"
-            f"<b>Side:</b> {side.upper()}\n"
-            f"<b>SL Price:</b> ${entry_price:,.2f} (entry)\n"
-            f"<b>Risk:</b> ZERO\n\n"
-            f"<i>Trade is now risk-free</i>\n"
+            f"<b>⏰ ORDER TIMED OUT — CANCELLED</b>\n\n"
+            f"<b>Type:</b> {order_type.upper()}\n"
+            f"<b>Timeout:</b> {config.ORDER_TIMEOUT_MINUTES} minutes\n"
+            f"<b>Action:</b> Order cancelled, not chasing price\n\n"
             f"<i>{self._timestamp()}</i>"
         )
 
     # ---------------------------------------------------------------
-    # STOP LOSS
-    # ---------------------------------------------------------------
-    def send_sl_hit_alert(self, side, entry_price, sl_price, pnl_pct):
-        """Stop loss hit notification."""
-        self._send(
-            f"{'='*28}\n"
-            f"<b>STOP LOSS TRIGGERED</b>\n"
-            f"{'='*28}\n\n"
-            f"<b>Side:</b> {side.upper()}\n"
-            f"<b>Entry:</b> ${entry_price:,.2f}\n"
-            f"<b>SL Hit:</b> ${sl_price:,.2f}\n"
-            f"<b>P&L:</b> {pnl_pct*100:.2f}%\n\n"
-            f"<i>{self._timestamp()}</i>"
-        )
-
-    # ---------------------------------------------------------------
-    # TRAILING SL
-    # ---------------------------------------------------------------
-    def send_trailing_sl_alert(self, side, entry_price, exit_price, pnl_pct):
-        """Trailing SL exit notification."""
-        self._send(
-            f"{'='*28}\n"
-            f"<b>TRAILING STOP TRIGGERED</b>\n"
-            f"{'='*28}\n\n"
-            f"<b>Side:</b> {side.upper()}\n"
-            f"<b>Entry:</b> ${entry_price:,.2f}\n"
-            f"<b>Exit:</b> ${exit_price:,.2f}\n"
-            f"<b>P&L:</b> {'+'if pnl_pct>=0 else ''}{pnl_pct*100:.2f}%\n\n"
-            f"<i>{self._timestamp()}</i>"
-        )
-
-    # ---------------------------------------------------------------
-    # BOT LOCKED
+    # BOT LOCKED (30% Drawdown)
     # ---------------------------------------------------------------
     def send_lock_alert(self, reason):
-        """Bot locked due to drawdown."""
+        """Bot locked due to 30% daily drawdown."""
         self._send(
-            f"{'='*28}\n"
-            f"<b>BOT LOCKED — DRAWDOWN LIMIT</b>\n"
-            f"{'='*28}\n\n"
+            f"{'='*32}\n"
+            f"<b>🔒 BOT PAUSED — 30% DRAWDOWN</b>\n"
+            f"{'='*32}\n\n"
             f"<b>Reason:</b> {reason}\n"
             f"<b>Duration:</b> {config.DAILY_LOCK_HOURS} hours\n\n"
-            f"<i>Bot will auto-unlock after cooldown period</i>\n"
+            f"<i>Bot will auto-resume after cooldown</i>\n"
             f"<i>{self._timestamp()}</i>"
         )
 
@@ -229,21 +208,6 @@ class AlertSystem:
             f"<b>TRADE BLOCKED — SAFETY FILTER</b>\n\n"
             f"<b>Reason:</b> {reason}\n\n"
             f"<i>Bot continues scanning...</i>\n"
-            f"<i>{self._timestamp()}</i>"
-        )
-
-    # ---------------------------------------------------------------
-    # SIGNAL DETECTED (No Entry)
-    # ---------------------------------------------------------------
-    def send_signal_detected(self, signal, price, stc, ema200, reason=""):
-        """Signal detected but conditions not fully met."""
-        self._send(
-            f"<b>SIGNAL DETECTED — NO ENTRY</b>\n\n"
-            f"<b>Signal:</b> {signal}\n"
-            f"<b>Price:</b> ${price:,.2f}\n"
-            f"<b>STC:</b> {stc:.1f}\n"
-            f"<b>EMA200:</b> ${ema200:,.2f}\n"
-            f"<b>Note:</b> {reason}\n\n"
             f"<i>{self._timestamp()}</i>"
         )
 
@@ -261,9 +225,9 @@ class AlertSystem:
     def send_error(self, error):
         """Error notification."""
         self._send(
-            f"{'='*28}\n"
-            f"<b>ERROR DETECTED</b>\n"
-            f"{'='*28}\n\n"
+            f"{'='*32}\n"
+            f"<b>⚠️ ERROR DETECTED</b>\n"
+            f"{'='*32}\n\n"
             f"<b>Details:</b> {str(error)[:200]}\n\n"
             f"<i>Bot will attempt to recover...</i>\n"
             f"<i>{self._timestamp()}</i>"

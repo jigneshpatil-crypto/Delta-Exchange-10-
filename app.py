@@ -1,5 +1,5 @@
 """
-BTC Global Elite Scalper V6 — Flask Web Server
+Heikin-Ashi + Chandelier Exit + LSMA Filter — Flask Web Server
 Professional dashboard + API endpoints for monitoring.
 """
 
@@ -36,7 +36,12 @@ def dashboard():
 # ---------------------------------------------------------------
 @app.route("/health")
 def health():
-    return jsonify({"status": "ok", "mode": config.MODE, "uptime": "running"})
+    return jsonify({
+        "status": "ok",
+        "mode": config.MODE,
+        "strategy": config.STRATEGY_NAME,
+        "uptime": "running",
+    })
 
 
 @app.route("/api/status")
@@ -60,9 +65,19 @@ def api_status():
 
         # Today trades
         today_trades = bot.db.get_today_trades()
-        today_pnl = sum(t.get("pnl", 0) or 0 for t in today_trades if t.get("status") == "closed")
-        today_wins = sum(1 for t in today_trades if t.get("status") == "closed" and (t.get("pnl", 0) or 0) > 0)
-        today_losses = sum(1 for t in today_trades if t.get("status") == "closed" and (t.get("pnl", 0) or 0) < 0)
+        today_pnl = sum(
+            t.get("pnl", 0) or 0
+            for t in today_trades
+            if t.get("status") == "closed"
+        )
+        today_wins = sum(
+            1 for t in today_trades
+            if t.get("status") == "closed" and (t.get("pnl", 0) or 0) > 0
+        )
+        today_losses = sum(
+            1 for t in today_trades
+            if t.get("status") == "closed" and (t.get("pnl", 0) or 0) < 0
+        )
 
         # Recent logs
         recent_logs = bot.db.get_recent_logs(limit=30)
@@ -71,15 +86,16 @@ def api_status():
             "ok": True,
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "mode": config.MODE,
+            "strategy": config.STRATEGY_NAME,
             "symbol": config.SYMBOL,
             "timeframe": config.TIMEFRAME,
             "leverage": config.LEVERAGE,
+            "direction": config.TRADE_DIRECTION,
             "panic_mode": bot.panic_mode,
             "bot_state": {
                 "is_locked": state.get("is_locked", False),
                 "last_candle_time": str(state.get("last_candle_time", "")),
                 "daily_start_balance": state.get("daily_start_balance", 0),
-                "last_trade_was_loss": state.get("last_trade_was_loss", False),
             },
             "wallet": {
                 "balance": wallet.get("balance", 0),
@@ -97,13 +113,24 @@ def api_status():
                 "size": abs(position.get("size", 0)) if position else 0,
                 "entry_price": position.get("entry_price", 0) if position else 0,
                 "pnl": position.get("unrealized_pnl", 0) if position else 0,
-            } if position else {"active": False, "side": "", "size": 0, "entry_price": 0, "pnl": 0},
+            } if position else {
+                "active": False, "side": "", "size": 0,
+                "entry_price": 0, "pnl": 0,
+            },
+            "risk": {
+                "hard_sl_pct": config.HARD_STOP_LOSS_PCT * 100,
+                "daily_drawdown_pct": config.MAX_DAILY_DRAWDOWN * 100,
+                "capital_per_trade": config.CAPITAL_PER_TRADE,
+                "pyramiding": config.PYRAMIDING,
+                "order_timeout_min": config.ORDER_TIMEOUT_MINUTES,
+            },
             "today": {
-                "total_trades": len([t for t in today_trades if t.get("status") == "closed"]),
+                "total_trades": len([
+                    t for t in today_trades if t.get("status") == "closed"
+                ]),
                 "wins": today_wins,
                 "losses": today_losses,
                 "pnl": round(today_pnl, 4),
-                "target": config.MAX_DAILY_DRAWDOWN * 100, # Placeholder or actual target
             },
             "recent_trades": [
                 {
@@ -139,6 +166,10 @@ def api_diagnostic():
     """Check environment health (without exposing secrets)."""
     return jsonify({
         "mode": config.MODE,
+        "strategy": config.STRATEGY_NAME,
+        "symbol": config.SYMBOL,
+        "timeframe": config.TIMEFRAME,
+        "direction": config.TRADE_DIRECTION,
         "api_key_set": len(config.DELTA_API_KEY) > 10,
         "api_secret_set": len(config.DELTA_API_SECRET) > 10,
         "db_connected": bot.db.test_connection(),
@@ -153,7 +184,11 @@ def api_panic():
     bot.panic_mode = not bot.panic_mode
     action = "ACTIVATED" if bot.panic_mode else "DEACTIVATED"
     bot.db.log_event("PANIC_TOGGLE", f"Panic mode {action} via dashboard")
-    return jsonify({"ok": True, "panic_mode": bot.panic_mode, "message": f"Panic mode {action}"})
+    return jsonify({
+        "ok": True,
+        "panic_mode": bot.panic_mode,
+        "message": f"Panic mode {action}",
+    })
 
 
 @app.route("/api/refresh", methods=["POST"])
@@ -162,12 +197,15 @@ def api_refresh():
     try:
         bot.product_id = bot.client.get_product_id()
         wallet = bot.client.get_wallet_balance()
-        bot.db.log_event("MANUAL_REFRESH", "System state re-synchronized via dashboard")
+        bot.db.log_event(
+            "MANUAL_REFRESH",
+            "System state re-synchronized via dashboard",
+        )
         return jsonify({
             "ok": True,
             "product_id": bot.product_id,
             "wallet": wallet,
-            "message": "System synchronized successfully"
+            "message": "System synchronized successfully",
         })
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500

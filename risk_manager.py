@@ -1,6 +1,6 @@
 """
-BTC Global Elite Scalper V6 — Risk Manager
-Dynamic position sizing, daily drawdown lock, anti-martingale.
+Heikin-Ashi + Chandelier Exit + LSMA Filter — Risk Manager
+$10 capital per trade, 30% daily drawdown lock, position sizing for BTC/USDT.
 """
 
 import logging
@@ -17,7 +17,6 @@ class RiskManager:
     def __init__(self, database):
         self.db = database
         self._daily_start_balance = None
-        self._last_trade_was_loss = False
 
     # ---------------------------------------------------------------
     # State Management
@@ -27,17 +26,14 @@ class RiskManager:
         state = self.db.get_bot_state()
         if state:
             self._daily_start_balance = state.get("daily_start_balance")
-            self._last_trade_was_loss = state.get("last_trade_was_loss", False)
             logger.info(
-                f"Risk state loaded — Daily start: ${self._daily_start_balance}, "
-                f"Last trade loss: {self._last_trade_was_loss}"
+                f"Risk state loaded — Daily start: ${self._daily_start_balance}"
             )
 
     def save_state(self):
         """Persist risk state to database."""
         self.db.update_bot_state({
             "daily_start_balance": self._daily_start_balance,
-            "last_trade_was_loss": self._last_trade_was_loss,
         })
 
     # ---------------------------------------------------------------
@@ -64,7 +60,7 @@ class RiskManager:
         return False
 
     # ---------------------------------------------------------------
-    # Daily Drawdown Lock
+    # Daily Drawdown Lock (30%)
     # ---------------------------------------------------------------
     def is_locked(self):
         """Check if bot is locked due to daily drawdown limit."""
@@ -85,7 +81,8 @@ class RiskManager:
                 if now < lock_dt:
                     remaining = (lock_dt - now).total_seconds() / 3600
                     logger.warning(
-                        f"🔒 Bot LOCKED — {remaining:.1f} hours remaining"
+                        f"🔒 Bot LOCKED — {remaining:.1f} hours remaining "
+                        f"(30% daily drawdown hit)"
                     )
                     return True
                 else:
@@ -103,8 +100,8 @@ class RiskManager:
 
     def check_drawdown(self, current_balance):
         """
-        Check if daily drawdown limit has been hit.
-        If 5% loss from daily start → lock bot for 24 hours.
+        Check if daily drawdown limit (30%) has been hit.
+        If equity drops by 30% (e.g., $3 loss on $10 account) → lock for 24h.
         """
         if self._daily_start_balance is None or self._daily_start_balance <= 0:
             self._daily_start_balance = current_balance
@@ -126,98 +123,61 @@ class RiskManager:
             })
             reason = (
                 f"🔒 DAILY DRAWDOWN LIMIT HIT! "
-                f"Loss: {drawdown*100:.2f}% (limit: {config.MAX_DAILY_DRAWDOWN*100}%) "
+                f"Loss: {drawdown*100:.1f}% (limit: {config.MAX_DAILY_DRAWDOWN*100}%) "
                 f"Start: ${self._daily_start_balance:.2f}, "
                 f"Current: ${current_balance:.2f}. "
-                f"Bot locked for {config.DAILY_LOCK_HOURS} hours."
+                f"Bot paused for {config.DAILY_LOCK_HOURS} hours."
             )
             logger.critical(reason)
             return True
 
         logger.debug(
-            f"Drawdown: {drawdown*100:.2f}% "
+            f"Drawdown: {drawdown*100:.1f}% "
             f"(limit: {config.MAX_DAILY_DRAWDOWN*100}%)"
         )
         return False
 
     # ---------------------------------------------------------------
-    # Dynamic Position Sizing
+    # Position Sizing ($10 capital per trade)
     # ---------------------------------------------------------------
     def calculate_position_size(self, current_balance, current_price):
         """
-        Calculate position size using 15% margin rule.
-        With 10x leverage on a $10 account:
-        - Margin = $10 * 0.15 = $1.50
-        - Notional = $1.50 * 10x = $15.00
-        - Size in BTC = $15 / price
+        Calculate position size.
+        Capital per trade: $10 (or 100% of available balance if < $10).
+        Leverage: 10x Isolated.
+
+        Notional = min($10, balance) * 10x = up to $100 notional
+        Size in contracts = Notional (Delta uses $1/contract for BTCUSDT)
 
         Returns:
             (size_contracts: int, margin_used: float, notional: float)
-            size_contracts is the number of contracts (minimum 1)
         """
         if current_balance <= 0 or current_price <= 0:
             logger.error("Invalid balance or price for position sizing")
             return 0, 0, 0
 
-        margin = current_balance * config.MARGIN_PERCENT
-        notional = margin * config.LEVERAGE
+        # Use $10 or entire balance if less
+        capital = min(config.CAPITAL_PER_TRADE, current_balance)
+        notional = capital * config.LEVERAGE  # $10 * 10x = $100
 
-        # Delta Exchange uses contract size (usually 1 contract = some USD value)
-        # For BTCUSDT perpetual, 1 contract is typically $1 notional
-        # So size = notional value in USD
+        # Delta Exchange BTCUSDT: 1 contract ≈ $1 notional
         size_contracts = int(notional)
 
         # Ensure minimum size of 1
         if size_contracts < 1:
             size_contracts = 1
-            margin = current_price / config.LEVERAGE
-            notional = current_price
+
+        margin_used = capital
 
         logger.info(
             f"📊 Position sizing — Balance: ${current_balance:.2f}, "
-            f"Margin (15%): ${margin:.2f}, "
+            f"Capital: ${capital:.2f}, "
             f"Leverage: {config.LEVERAGE}x, "
             f"Notional: ${notional:.2f}, "
             f"Size: {size_contracts} contracts"
         )
 
-        return size_contracts, margin, notional
-
-    # ---------------------------------------------------------------
-    # Anti-Martingale
-    # ---------------------------------------------------------------
-    def record_trade_result(self, pnl):
-        """
-        Record whether last trade was a loss.
-        Anti-martingale: never increase size after a loss.
-        """
-        self._last_trade_was_loss = pnl < 0
-        self.save_state()
-
-        if self._last_trade_was_loss:
-            logger.info(
-                "📉 Last trade was a LOSS — Anti-martingale active "
-                "(no size increase)"
-            )
-        else:
-            logger.info("📈 Last trade was a WIN")
-
-    def apply_anti_martingale(self, base_size):
-        """
-        Apply anti-martingale rule: after a loss, use same or smaller size.
-        After a win, use the calculated base size (no increase beyond base).
-        """
-        if self._last_trade_was_loss:
-            # Keep same size — never increase after loss
-            adjusted = base_size
-            logger.info(
-                f"Anti-martingale: Keeping size at {adjusted} "
-                f"(same as base, no increase after loss)"
-            )
-        else:
-            adjusted = base_size
-
-        return max(1, adjusted)  # Minimum 1 contract
+        return size_contracts, margin_used, notional
 
     # ---------------------------------------------------------------
     # Full Pre-Trade Risk Check
@@ -229,21 +189,13 @@ class RiskManager:
         Returns:
             (approved: bool, size: int, reason: str)
         """
-        # Check if locked
+        # Check if locked (30% daily drawdown)
         if self.is_locked():
-            return False, 0, "Bot is locked due to daily drawdown limit"
-
-        # Check daily trade count
-        today_trades = self.db.get_today_trades()
-        # Count closed trades + current open if any (though loop handles open)
-        # Usually we count closed trades to see how many we've DONE
-        closed_today = [t for t in today_trades if t.get("status") == "closed"]
-        if len(closed_today) >= config.MAX_TRADES_PER_DAY:
-            return False, 0, f"Daily trade limit ({config.MAX_TRADES_PER_DAY}) reached"
+            return False, 0, "Bot is locked — 30% daily drawdown limit hit"
 
         # Check drawdown
         if self.check_drawdown(current_balance):
-            return False, 0, "Daily drawdown limit just hit — locking bot"
+            return False, 0, "Daily drawdown limit just hit — pausing bot for 24h"
 
         # Calculate position size
         size, margin, notional = self.calculate_position_size(
@@ -251,8 +203,5 @@ class RiskManager:
         )
         if size <= 0:
             return False, 0, "Position size too small"
-
-        # Apply anti-martingale
-        size = self.apply_anti_martingale(size)
 
         return True, size, f"Approved — Size: {size} contracts, Margin: ${margin:.2f}"

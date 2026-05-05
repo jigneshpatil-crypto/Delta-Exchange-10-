@@ -1,7 +1,6 @@
 """
-BTC Global Elite Scalper V6 — Safety Filters
-Advanced loss prevention layer: News Filter, Spread Guard,
-Time-Out Exit, Max 1 Trade, Breakeven Logic.
+Heikin-Ashi + Chandelier Exit + LSMA Filter — Safety Filters
+Pyramiding guard, spread check, and news filter for safe execution.
 """
 
 import time
@@ -16,7 +15,7 @@ logger = logging.getLogger("SafetyFilters")
 
 
 class SafetyFilters:
-    """All safety checks that must pass before entering a trade."""
+    """Pre-entry safety checks. Must all pass before placing a trade."""
 
     def __init__(self, delta_client):
         self.client = delta_client
@@ -61,11 +60,9 @@ class SafetyFilters:
                 country = event.get("country", "")
                 event_name = event.get("event", "")
 
-                # Only USD high-impact events
                 if country != "US":
                     continue
                 if impact not in ("high", "3"):
-                    # Also check by event name keywords
                     is_high = any(
                         kw.lower() in event_name.lower()
                         for kw in config.HIGH_IMPACT_EVENTS
@@ -84,7 +81,7 @@ class SafetyFilters:
 
         except Exception as e:
             logger.error(f"Failed to fetch economic calendar: {e}")
-            return self._news_cache  # Return stale cache on error
+            return self._news_cache
 
     def check_news_filter(self):
         """
@@ -96,10 +93,9 @@ class SafetyFilters:
             return True, "No high-impact news events"
 
         now = datetime.now(timezone.utc)
-        buffer = timedelta(minutes=config.NEWS_BUFFER_MINUTES)
+        buffer = timedelta(minutes=30)
 
         for event in events:
-            # Parse event time
             event_time_str = event.get("time", "")
             event_date = event.get("date", "")
 
@@ -118,11 +114,10 @@ class SafetyFilters:
                 except ValueError:
                     continue
 
-            # Check if we're within the buffer window
             if (event_dt - buffer) <= now <= (event_dt + buffer):
                 event_name = event.get("event", "Unknown")
                 reason = (
-                    f"Skipping trade due to High News Volatility: "
+                    f"Skipping trade — High Impact News: "
                     f"'{event_name}' at {event_dt.strftime('%H:%M UTC')}"
                 )
                 logger.warning(reason)
@@ -136,14 +131,13 @@ class SafetyFilters:
     def check_spread(self):
         """
         Returns (is_safe, spread_pct, reason).
-        Blocks if bid-ask spread > 0.05%.
+        Blocks if bid-ask spread > threshold.
         """
         orderbook = self.client.get_orderbook()
         if not orderbook:
             return False, 0, "Failed to fetch orderbook"
 
         try:
-            # Orderbook format: {"buy": [{"price": ..., "size": ...}], "sell": [...]}
             bids = orderbook.get("buy", [])
             asks = orderbook.get("sell", [])
 
@@ -178,73 +172,25 @@ class SafetyFilters:
             return False, 0, f"Error parsing orderbook: {e}"
 
     # ---------------------------------------------------------------
-    # 3. MAX 1 ACTIVE TRADE
+    # 3. PYRAMIDING GUARD (Max 1 Active Trade)
     # ---------------------------------------------------------------
-    def check_max_trades(self, product_id=None):
+    def check_no_active_position(self, product_id=None):
         """
         Returns (is_safe, reason).
-        Blocks if there's already an active position.
+        STRICTLY blocks if there's already an active position (pyramiding = 1).
         """
         pos = self.client.get_position(product_id)
         if pos and pos["size"] != 0:
             reason = (
-                f"Active trade exists — {pos['side'].upper()} "
-                f"size={abs(pos['size'])} @ {pos['entry_price']}, "
+                f"Active position exists (pyramiding=1, blocked) — "
+                f"{pos['side'].upper()} size={abs(pos['size'])} "
+                f"@ ${pos['entry_price']}, "
                 f"P&L: {pos['unrealized_pnl']}"
             )
             logger.info(reason)
             return False, reason
 
-        return True, "No active trades"
-
-    # ---------------------------------------------------------------
-    # 4. TIME-OUT EXIT CHECK
-    # ---------------------------------------------------------------
-    def check_timeout_exit(self, trade_entry_time):
-        """
-        Returns True if trade has exceeded timeout limit.
-        trade_entry_time: datetime object (UTC)
-        """
-        if not trade_entry_time:
-            return False
-
-        now = datetime.now(timezone.utc)
-        elapsed = (now - trade_entry_time).total_seconds() / 60  # minutes
-
-        if elapsed >= config.TIMEOUT_MINUTES:
-            logger.warning(
-                f"Trade timeout! Open for {elapsed:.1f} min "
-                f"(limit: {config.TIMEOUT_MINUTES} min). Closing position."
-            )
-            return True
-
-        return False
-
-    # ---------------------------------------------------------------
-    # 5. BREAKEVEN LOGIC
-    # ---------------------------------------------------------------
-    def check_breakeven(self, entry_price, current_price, side):
-        """
-        Returns True if breakeven condition is met (0.5% profit reached).
-        When True, SL should be moved to entry price.
-        """
-        if not entry_price or not current_price:
-            return False
-
-        if side == "long":
-            profit_pct = (current_price - entry_price) / entry_price
-        else:  # short
-            profit_pct = (entry_price - current_price) / entry_price
-
-        if profit_pct >= config.BREAKEVEN_TRIGGER_PCT:
-            logger.info(
-                f"Breakeven triggered! Profit: {profit_pct*100:.2f}% >= "
-                f"{config.BREAKEVEN_TRIGGER_PCT*100:.1f}% — "
-                f"Moving SL to entry price: {entry_price}"
-            )
-            return True
-
-        return False
+        return True, "No active position — entry allowed"
 
     # ---------------------------------------------------------------
     # RUN ALL PRE-ENTRY CHECKS
@@ -259,10 +205,10 @@ class SafetyFilters:
         results = {}
         all_passed = True
 
-        # 1. News Filter
-        news_safe, news_reason = self.check_news_filter()
-        results["news"] = {"passed": news_safe, "reason": news_reason}
-        if not news_safe:
+        # 1. Pyramiding Guard (most important)
+        pos_safe, pos_reason = self.check_no_active_position(product_id)
+        results["pyramiding"] = {"passed": pos_safe, "reason": pos_reason}
+        if not pos_safe:
             all_passed = False
 
         # 2. Spread Guard
@@ -275,10 +221,10 @@ class SafetyFilters:
         if not spread_safe:
             all_passed = False
 
-        # 3. Max 1 Active Trade
-        trade_safe, trade_reason = self.check_max_trades(product_id)
-        results["max_trades"] = {"passed": trade_safe, "reason": trade_reason}
-        if not trade_safe:
+        # 3. News Filter
+        news_safe, news_reason = self.check_news_filter()
+        results["news"] = {"passed": news_safe, "reason": news_reason}
+        if not news_safe:
             all_passed = False
 
         if all_passed:
