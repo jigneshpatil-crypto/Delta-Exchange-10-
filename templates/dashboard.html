@@ -3,793 +3,720 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sniper Bot | Professional Terminal</title>
+    <title>Delta Quantitative Terminal | Enterprise Edition</title>
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- TradingView Widget -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+
     <style>
         :root {
-            --bg-base: #06090e;
-            --bg-glass: rgba(16, 22, 35, 0.65);
-            --bg-glass-hover: rgba(26, 35, 55, 0.85);
-            --border-glass: rgba(255, 255, 255, 0.08);
-            --text-main: #f0f4f8;
-            --text-muted: #8a96a8;
-            --accent-primary: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.5);
+            /* Colors */
+            --bg-dark: #0a0e17;
+            --bg-panel: #111827;
+            --bg-glass: rgba(17, 24, 39, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(59, 130, 246, 0.5);
+            
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --primary-glow: rgba(59, 130, 246, 0.3);
+            
             --success: #10b981;
-            --success-glow: rgba(16, 185, 129, 0.3);
+            --success-glow: rgba(16, 185, 129, 0.2);
             --danger: #ef4444;
-            --danger-glow: rgba(239, 68, 68, 0.3);
+            --danger-glow: rgba(239, 68, 68, 0.2);
             --warning: #f59e0b;
+            
+            /* Sizing */
+            --sidebar-width: 260px;
+            --topbar-height: 70px;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-base);
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
             color: var(--text-main);
-            min-height: 100vh;
-            overflow-x: hidden;
+            overflow: hidden;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* --- Scrollbar --- */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+        /* --- Layout --- */
+        #sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        #main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
             position: relative;
         }
 
-        /* Ambient Background Gradients */
-        body::before {
+        /* Ambient Glow in Main Area */
+        #main-content::before {
             content: '';
-            position: fixed;
-            top: -20%;
-            left: -10%;
-            width: 50vw;
-            height: 50vw;
+            position: absolute;
+            top: -10%; right: -10%; width: 40vw; height: 40vw;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
             border-radius: 50%;
-            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 60%);
-            filter: blur(100px);
+            filter: blur(80px);
             z-index: -1;
-            opacity: 0.4;
+            pointer-events: none;
         }
 
-        body::after {
-            content: '';
-            position: fixed;
-            bottom: -20%;
-            right: -10%;
-            width: 40vw;
-            height: 40vw;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 60%);
-            filter: blur(100px);
-            z-index: -1;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 2rem;
-        }
-
-        /* --- Header --- */
-        header {
+        #topbar {
+            height: var(--topbar-height);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 1.5rem 2rem;
-            background: var(--bg-glass);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-glass);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            justify-content: space-between;
+            padding: 0 2rem;
+            background: rgba(10, 14, 23, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 5;
         }
 
+        #content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        /* --- Sidebar UI --- */
         .brand {
+            padding: 1.5rem;
             display: flex;
             align-items: center;
             gap: 1rem;
+            border-bottom: 1px solid var(--border-color);
         }
-
         .brand-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--accent-primary), #8b5cf6);
-            border-radius: 12px;
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .brand-text h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.5px; }
+        .brand-text span { font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;}
+
+        .nav-menu {
+            padding: 1.5rem 1rem;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 20px var(--accent-glow);
-        }
-
-        .brand-icon i {
-            color: white;
-            width: 24px;
-            height: 24px;
-        }
-
-        .brand-text h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            background: linear-gradient(to right, #fff, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .brand-text p {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .header-controls {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        .badge {
-            padding: 0.4rem 1rem;
-            border-radius: 30px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 0.5rem;
+            flex: 1;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        .nav-item:hover {
+            background: rgba(255,255,255,0.03);
+            color: var(--text-main);
+        }
+        .nav-item.active {
+            background: var(--primary-glow);
+            color: var(--primary);
+            border-left: 3px solid var(--primary);
         }
 
-        .badge.production {
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .system-status {
+            display: flex; align-items: center; gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); }
+
+        /* --- Topbar UI --- */
+        .top-left { display: flex; align-items: center; gap: 1rem; }
+        .page-title { font-size: 1.25rem; font-weight: 600; }
+        
+        .top-right { display: flex; align-items: center; gap: 1rem; }
+        
+        .badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem; font-weight: 700; letter-spacing: 1px;
             background: rgba(16, 185, 129, 0.1);
             color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        .badge.testnet {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-        }
-
-        .badge.locked {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            animation: pulse 2s infinite;
-        }
-
-        .pulse-dot {
-            width: 8px;
-            height: 8px;
-            background: currentColor;
-            border-radius: 50%;
-            box-shadow: 0 0 10px currentColor;
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
 
         .btn {
+            display: flex; align-items: center; gap: 0.5rem;
             padding: 0.6rem 1.2rem;
-            border: none;
-            border-radius: 10px;
-            font-family: inherit;
-            font-weight: 600;
-            font-size: 0.9rem;
+            border: 1px solid var(--border-color);
+            background: var(--bg-panel);
+            color: var(--text-main);
+            border-radius: 8px;
+            font-family: inherit; font-weight: 500; font-size: 0.85rem;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
         }
+        .btn:hover { background: #1f2937; border-color: #374151; }
+        .btn-primary { background: var(--primary); border-color: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); box-shadow: 0 0 15px var(--primary-glow); }
+        .btn-danger { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: white; box-shadow: 0 0 15px var(--danger-glow); }
 
-        .btn-panic {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-        }
+        /* --- Views --- */
+        .view { display: none; animation: fadeIn 0.4s ease; }
+        .view.active { display: block; }
 
-        .btn-panic:hover {
-            background: var(--danger);
-            color: white;
-            box-shadow: 0 0 20px var(--danger-glow);
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .btn-panic.active {
-            background: var(--danger);
-            color: white;
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        }
-
-        /* --- Grid Layouts --- */
-        .grid-kpi {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            animation: fadeIn 0.8s ease 0.1s both;
-        }
-
-        .grid-main {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 1.5rem;
-            animation: fadeIn 0.8s ease 0.2s both;
-        }
-
-        @media (max-width: 1024px) {
-            .grid-main {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* --- Glass Cards --- */
+        /* --- Grid & Cards --- */
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+        .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+        
         .card {
             background: var(--bg-glass);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-glass);
-            border-radius: 20px;
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             padding: 1.5rem;
-            transition: transform 0.3s ease, border-color 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
         }
-
-        .card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.15);
-            background: var(--bg-glass-hover);
-        }
-
+        .card:hover { border-color: var(--border-hover); }
+        
         .card-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1rem; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;
         }
+        .card-title-icon { display: flex; align-items: center; gap: 0.5rem; }
+        .card-title-icon i { color: var(--primary); width: 18px; height: 18px; }
 
-        .card-header i {
-            color: var(--accent-primary);
-        }
-
-        /* KPI Values */
-        .kpi-val {
-            font-size: 2.2rem;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-            margin-bottom: 0.5rem;
-        }
-
-        .kpi-sub {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .color-up { color: var(--success); text-shadow: 0 0 10px var(--success-glow); }
-        .color-down { color: var(--danger); text-shadow: 0 0 10px var(--danger-glow); }
-        .color-neutral { color: var(--text-main); }
-
-        /* --- Strategy Details --- */
-        .detail-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-        }
-
-        .detail-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 0.8rem;
-            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
-        }
-
-        .detail-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .detail-label {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .detail-val {
-            font-weight: 600;
-            font-family: 'JetBrains Mono', monospace;
-        }
+        /* KPI Specific */
+        .kpi-value { font-size: 2rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-bottom: 0.5rem; }
+        .kpi-sub { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; }
+        
+        .up { color: var(--success); }
+        .down { color: var(--danger); }
+        .glow-up { text-shadow: 0 0 10px var(--success-glow); }
+        .glow-down { text-shadow: 0 0 10px var(--danger-glow); }
 
         /* --- Tables --- */
-        .table-container {
-            overflow-x: auto;
-        }
+        .table-wrap { overflow-x: auto; margin-top: 1rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th { text-align: left; padding: 1rem; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border-color); text-transform: uppercase; font-size: 0.75rem; }
+        td { padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.02); font-family: 'JetBrains Mono', monospace; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+        .status-badge { padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.7rem; font-weight: bold; background: rgba(255,255,255,0.1); }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 0.9rem;
+        /* --- Terminal --- */
+        .terminal-box {
+            background: #000; border-radius: 8px; padding: 1rem; height: 400px; overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; border: 1px solid var(--border-color);
         }
+        .log-row { margin-bottom: 0.4rem; display: flex; gap: 1rem; }
+        .l-time { color: #6b7280; width: 60px; flex-shrink: 0; }
+        .l-type { font-weight: 600; width: 80px; flex-shrink: 0; }
+        .l-msg { color: #d1d5db; }
 
-        th {
-            color: var(--text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 0.75rem;
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-glass);
-        }
+        /* Chart Container */
+        #tv_chart_container { height: 600px; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
 
-        td {
-            padding: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-            font-family: 'JetBrains Mono', monospace;
+        /* Modal Overlay for Actions */
+        #sync-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.8); z-index: 100; display: none;
+            align-items: center; justify-content: center; flex-direction: column; gap: 1rem;
         }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        /* --- Terminal Logs --- */
-        .terminal {
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 12px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            height: 350px;
-            overflow-y: auto;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .terminal::-webkit-scrollbar {
-            width: 6px;
-        }
-        .terminal::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.1);
-            border-radius: 3px;
-        }
-
-        .log-line {
-            margin-bottom: 0.5rem;
-            line-height: 1.4;
-            display: flex;
-            gap: 1rem;
-        }
-
-        .log-time { color: #5c6a82; }
-        .log-type { color: var(--accent-primary); font-weight: bold; width: 80px; flex-shrink: 0; }
-        .log-msg { color: #cdd6f4; }
-        
-        .log-type.ENTRY { color: var(--success); }
-        .log-type.EXIT { color: var(--warning); }
-        .log-type.ERROR { color: var(--danger); }
-        .log-type.RISK_BLOCK { color: var(--danger); }
-
-        /* Animations */
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.6; }
-            100% { opacity: 1; }
-        }
-
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
-
-        /* Status Indicator */
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            background: var(--success);
-            border-radius: 50%;
-            display: inline-block;
-            box-shadow: 0 0 10px var(--success-glow);
-            position: relative;
-        }
-        .status-dot::after {
-            content: '';
-            position: absolute;
-            top: -4px; left: -4px; right: -4px; bottom: -4px;
-            border-radius: 50%;
-            border: 2px solid var(--success);
-            animation: ripple 1.5s infinite ease-out;
-            opacity: 0;
-        }
-        @keyframes ripple {
-            0% { transform: scale(0.8); opacity: 0.8; }
-            100% { transform: scale(2); opacity: 0; }
-        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- Header -->
-        <header>
-            <div class="brand">
-                <div class="brand-icon">
-                    <i data-lucide="crosshair"></i>
-                </div>
-                <div class="brand-text">
-                    <h1>SNIPER TERMINAL</h1>
-                    <p id="ui-strategy">Loading System...</p>
-                </div>
+    <!-- Sidebar -->
+    <nav id="sidebar">
+        <div class="brand">
+            <div class="brand-icon"><i data-lucide="cpu"></i></div>
+            <div class="brand-text">
+                <h1>Delta Quant</h1>
+                <span id="sb-strategy">Elite V6 Architecture</span>
             </div>
-            
-            <div class="header-controls">
-                <div class="status-dot" title="System Online"></div>
-                <div id="ui-clock" style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-muted);">
-                    00:00:00 UTC
-                </div>
-                <div id="ui-mode-badge" class="badge production">
-                    <div class="pulse-dot"></div>
-                    PRODUCTION
-                </div>
-                <div id="ui-lock-badge" class="badge locked" style="display: none;">
-                    <i data-lucide="lock" style="width: 14px; height: 14px;"></i>
-                    DRAWDOWN LOCK
-                </div>
-                <button id="btn-panic" class="btn btn-panic" onclick="togglePanic()">
-                    <i data-lucide="alert-triangle" style="width: 18px; height: 18px;"></i>
-                    <span id="panic-text">EMERGENCY STOP</span>
+        </div>
+        
+        <div class="nav-menu">
+            <div class="nav-item active" onclick="switchView('view-dashboard', 'System Overview', this)">
+                <i data-lucide="layout-dashboard"></i> Overview
+            </div>
+            <div class="nav-item" onclick="switchView('view-chart', 'Live Market Chart', this)">
+                <i data-lucide="line-chart"></i> Market Chart
+            </div>
+            <div class="nav-item" onclick="switchView('view-history', 'Trade Execution History', this)">
+                <i data-lucide="history"></i> Trade History
+            </div>
+            <div class="nav-item" onclick="switchView('view-settings', 'Strategy Parameters', this)">
+                <i data-lucide="settings-2"></i> Parameters
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="system-status">
+                <div class="dot"></div> <span id="sb-status">System Online</span>
+            </div>
+            <div id="sb-clock" style="font-family: 'JetBrains Mono'; margin-top: 5px;">00:00:00 UTC</div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Topbar -->
+        <header id="topbar">
+            <div class="top-left">
+                <h2 class="page-title" id="page-title">System Overview</h2>
+                <div id="top-badge" class="badge">PRODUCTION</div>
+            </div>
+            <div class="top-right">
+                <button class="btn" onclick="syncWallet()">
+                    <i data-lucide="refresh-cw"></i> Sync Wallet
+                </button>
+                <button id="btn-panic" class="btn btn-danger" onclick="togglePanic()">
+                    <i data-lucide="shield-alert"></i> <span id="panic-text">Emergency Stop</span>
                 </button>
             </div>
         </header>
 
-        <!-- KPI Grid -->
-        <div class="grid-kpi">
-            <div class="card">
-                <div class="card-header">
-                    <i data-lucide="activity"></i>
-                    <span id="ui-symbol">BTCUSD</span> Live Price
-                </div>
-                <div class="kpi-val" id="ui-price">$0.00</div>
-                <div class="kpi-sub">
-                    <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
-                    Last updated: <span id="ui-last-update">Just now</span>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <i data-lucide="wallet"></i>
-                    Available Capital
-                </div>
-                <div class="kpi-val" id="ui-balance">$0.00</div>
-                <div class="kpi-sub" style="color: var(--accent-primary);">
-                    <i data-lucide="shield" style="width: 14px; height: 14px;"></i>
-                    Risk: $10 / Trade
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <i data-lucide="target"></i>
-                    Active Position
-                </div>
-                <div class="kpi-val" id="ui-pos-size">NO POSITION</div>
-                <div class="kpi-sub" id="ui-pos-pnl">
-                    Scanning for entry...
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <i data-lucide="calendar"></i>
-                    Today's Performance
-                </div>
-                <div class="kpi-val" id="ui-today-pnl">$0.00</div>
-                <div class="kpi-sub">
-                    <span id="ui-today-trades">0</span> Trades (<span id="ui-today-wins" class="color-up">0</span>W - <span id="ui-today-losses" class="color-down">0</span>L)
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Content -->
-        <div class="grid-main">
-            <!-- Left Column -->
-            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                
-                <div class="card">
-                    <div class="card-header">
-                        <i data-lucide="history"></i>
-                        Recent Executions
+        <!-- Content Area -->
+        <div id="content-area">
+            
+            <!-- VIEW: DASHBOARD -->
+            <div id="view-dashboard" class="view active">
+                <!-- KPI Grid -->
+                <div class="grid-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-icon"><i data-lucide="wallet"></i> Wallet Balance</div>
+                        </div>
+                        <div class="kpi-value" id="kpi-balance">$0.00</div>
+                        <div class="kpi-sub">
+                            <span id="kpi-avail">Available: $0.00</span>
+                        </div>
                     </div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Time</th>
-                                    <th>Side</th>
-                                    <th>Entry</th>
-                                    <th>Exit</th>
-                                    <th>P&L</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="ui-trades-body">
-                                <tr>
-                                    <td colspan="6" style="text-align: center; color: var(--text-muted);">No recent trades</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <i data-lucide="terminal"></i>
-                        System Logs
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-icon"><i data-lucide="target"></i> Active Position</div>
+                            <div id="pos-badge" class="status-badge" style="display:none">LIVE</div>
+                        </div>
+                        <div class="kpi-value" id="kpi-pos">NO POSITION</div>
+                        <div class="kpi-sub" id="kpi-pos-sub">Waiting for Entry Signal</div>
                     </div>
-                    <div class="terminal" id="ui-logs-body">
-                        <div class="log-line">
-                            <span class="log-time">System</span>
-                            <span class="log-type" style="color: var(--text-muted)">INFO</span>
-                            <span class="log-msg">Connecting to data stream...</span>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-icon"><i data-lucide="trending-up"></i> Today's P&L</div>
+                        </div>
+                        <div class="kpi-value" id="kpi-today-pnl">$0.00</div>
+                        <div class="kpi-sub">
+                            <span id="kpi-today-trades">0</span> Executions Today
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-icon"><i data-lucide="award"></i> Win Rate (Today)</div>
+                        </div>
+                        <div class="kpi-value" id="kpi-winrate">0%</div>
+                        <div class="kpi-sub">
+                            <span class="up" id="kpi-wins">0W</span> - <span class="down" id="kpi-losses">0L</span>
                         </div>
                     </div>
                 </div>
 
+                <div class="grid-2">
+                    <!-- Recent Trades Mini -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-icon"><i data-lucide="list"></i> Latest Executions</div>
+                            <button class="btn" style="padding: 0.3rem 0.6rem; font-size:0.7rem" onclick="document.querySelectorAll('.nav-item')[2].click()">View All</button>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Type</th>
+                                        <th>Entry Price</th>
+                                        <th>P&L</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mini-trades-body">
+                                    <tr><td colspan="4" style="text-align:center">No executions yet</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- System Logs -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-icon"><i data-lucide="terminal-square"></i> Live Console</div>
+                        </div>
+                        <div class="terminal-box" id="terminal-body">
+                            <!-- Logs go here -->
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Right Column -->
-            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                
-                <div class="card">
-                    <div class="card-header">
-                        <i data-lucide="settings-2"></i>
-                        Strategy Parameters
-                    </div>
-                    <ul class="detail-list">
-                        <li class="detail-item">
-                            <span class="detail-label">Asset</span>
-                            <span class="detail-val" id="param-symbol">BTCUSD</span>
-                        </li>
-                        <li class="detail-item">
-                            <span class="detail-label">Timeframe</span>
-                            <span class="detail-val" id="param-tf">5m</span>
-                        </li>
-                        <li class="detail-item">
-                            <span class="detail-label">Direction</span>
-                            <span class="detail-val color-up">LONG ONLY</span>
-                        </li>
-                        <li class="detail-item">
-                            <span class="detail-label">Leverage</span>
-                            <span class="detail-val" id="param-lev">10x Isolated</span>
-                        </li>
-                        <li class="detail-item">
-                            <span class="detail-label">Pyramiding</span>
-                            <span class="detail-val">Strictly 1</span>
-                        </li>
-                        <li class="detail-item">
-                            <span class="detail-label">Order Type</span>
-                            <span class="detail-val" style="color: var(--accent-primary);">LIMIT ONLY</span>
-                        </li>
-                    </ul>
+            <!-- VIEW: CHART -->
+            <div id="view-chart" class="view">
+                <div class="card" style="padding: 0;">
+                    <!-- TradingView Widget BEGIN -->
+                    <div id="tv_chart_container"></div>
+                    <!-- TradingView Widget END -->
                 </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <i data-lucide="shield-alert"></i>
-                        Risk Constraints
-                    </div>
-                    <ul class="detail-list">
-                        <li class="detail-item">
-                            <span class="detail-label">Capital / Trade</span>
-                            <span class="detail-val">$10.00</span>
-                        </li>
-                        <li class="detail-item">
-                            <span class="detail-label">Hard Stop-Loss</span>
-                            <span class="detail-val color-down">-8.0%</span>
-                        </li>
-                        <li class="detail-item">
-                            <span class="detail-label">Order Timeout</span>
-                            <span class="detail-val">15 Minutes</span>
-                        </li>
-                        <li class="detail-item">
-                            <span class="detail-label">Daily Drawdown</span>
-                            <span class="detail-val color-down">-30% (24h Lock)</span>
-                        </li>
-                        <li class="detail-item" style="margin-top: 0.5rem; padding-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                            <span class="detail-label">Daily Start Eq</span>
-                            <span class="detail-val" id="param-start-bal">$0.00</span>
-                        </li>
-                    </ul>
-                </div>
-
             </div>
+
+            <!-- VIEW: HISTORY -->
+            <div id="view-history" class="view">
+                <div class="card">
+                    <div class="card-header" style="margin-bottom: 0;">
+                        <div class="card-title-icon"><i data-lucide="database"></i> Complete Trade Ledger</div>
+                    </div>
+                    <div class="table-wrap" style="height: 600px; overflow-y: auto;">
+                        <table>
+                            <thead style="position: sticky; top: 0; background: var(--bg-panel); z-index: 1;">
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>Side</th>
+                                    <th>Size</th>
+                                    <th>Entry Price</th>
+                                    <th>Exit Price</th>
+                                    <th>P&L (USD)</th>
+                                    <th>P&L (%)</th>
+                                    <th>Status</th>
+                                    <th>Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody id="full-trades-body">
+                                <tr><td colspan="9" style="text-align:center">No data available</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: SETTINGS -->
+            <div id="view-settings" class="view">
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-icon"><i data-lucide="sliders"></i> Core Algorithm</div>
+                        </div>
+                        <table style="margin-top:1rem;">
+                            <tr><td style="color:var(--text-muted)">Strategy</td><td id="set-strategy">Loading...</td></tr>
+                            <tr><td style="color:var(--text-muted)">Market</td><td id="set-symbol">BTCUSD</td></tr>
+                            <tr><td style="color:var(--text-muted)">Timeframe</td><td id="set-tf">5m</td></tr>
+                            <tr><td style="color:var(--text-muted)">Direction</td><td class="up">LONG ONLY</td></tr>
+                        </table>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title-icon"><i data-lucide="shield"></i> Risk Engine</div>
+                        </div>
+                        <table style="margin-top:1rem;">
+                            <tr><td style="color:var(--text-muted)">Capital Allocation</td><td id="set-cap">$0.00 / Trade</td></tr>
+                            <tr><td style="color:var(--text-muted)">Leverage</td><td id="set-lev">10x Isolated</td></tr>
+                            <tr><td style="color:var(--text-muted)">Hard Stop-Loss</td><td class="down" id="set-sl">-8.0%</td></tr>
+                            <tr><td style="color:var(--text-muted)">Daily Drawdown Limit</td><td class="down" id="set-dd">-30.0%</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
+    </main>
+
+    <!-- Sync Overlay -->
+    <div id="sync-overlay">
+        <div class="spinner"></div>
+        <div style="font-weight: 600; letter-spacing: 1px;">SYNCHRONIZING WITH EXCHANGE...</div>
     </div>
 
     <script>
-        // Initialize Icons
         lucide.createIcons();
 
-        // Clock Update
+        // Clock
         setInterval(() => {
-            const now = new Date();
-            document.getElementById('ui-clock').textContent = now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+            const d = new Date();
+            document.getElementById('sb-clock').textContent = d.toISOString().substring(11, 19) + ' UTC';
         }, 1000);
 
-        // Fetch Data
+        // View Switcher
+        function switchView(viewId, title, element) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            element.classList.add('active');
+            
+            document.getElementById('page-title').textContent = title;
+
+            // Load chart only when needed to save resources
+            if (viewId === 'view-chart' && !window.tvWidget) {
+                initChart();
+            }
+        }
+
+        // TradingView Integration
+        function initChart() {
+            window.tvWidget = new TradingView.widget({
+                "autosize": true,
+                "symbol": "BINANCE:BTCUSDT", // Best proxy for BTCUSD perps
+                "interval": "5",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "enable_publishing": false,
+                "backgroundColor": "#111827",
+                "gridColor": "rgba(255, 255, 255, 0.05)",
+                "hide_top_toolbar": false,
+                "save_image": false,
+                "container_id": "tv_chart_container",
+                "studies": [
+                    "ChandelierExit@tv-basicstudies",
+                    "LeastSquaresMovingAverage@tv-basicstudies"
+                ]
+            });
+        }
+
+        // API Fetch & UI Update
+        let globalData = null;
+
         async function fetchStatus() {
             try {
                 const res = await fetch('/api/status');
                 const data = await res.json();
                 if (data.ok) {
+                    globalData = data;
                     updateUI(data);
                 }
             } catch (err) {
-                console.error("Failed to fetch API:", err);
+                console.error("API Fetch Error");
+                document.getElementById('sb-status').textContent = "Connection Lost";
+                document.getElementById('sb-status').style.color = "var(--danger)";
             }
         }
 
-        function formatCurrency(val) {
+        function fmtCurr(val) {
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
         }
-
-        function formatTime(isoStr) {
-            if (!isoStr) return '-';
-            const d = new Date(isoStr);
-            return d.toISOString().substring(11, 16); // HH:MM
+        function fmtTime(iso) {
+            if(!iso) return '-';
+            return iso.replace('T', ' ').substring(5, 16); // MM-DD HH:MM
         }
 
         function updateUI(data) {
-            // Header
-            document.getElementById('ui-strategy').textContent = data.strategy;
-            
-            const badge = document.getElementById('ui-mode-badge');
-            badge.className = `badge ${data.mode}`;
-            badge.innerHTML = `<div class="pulse-dot"></div>${data.mode.toUpperCase()}`;
+            document.getElementById('sb-status').textContent = "System Online";
+            document.getElementById('sb-status').style.color = "var(--text-main)";
+            document.getElementById('sb-strategy').textContent = data.strategy;
+            document.getElementById('set-strategy').textContent = data.strategy;
 
-            const lockBadge = document.getElementById('ui-lock-badge');
-            lockBadge.style.display = data.bot_state.is_locked ? 'flex' : 'none';
+            // Mode Badge
+            const badge = document.getElementById('top-badge');
+            badge.textContent = data.mode.toUpperCase();
+            if(data.mode === 'testnet') {
+                badge.style.background = 'rgba(245,158,11,0.1)';
+                badge.style.color = 'var(--warning)';
+                badge.style.borderColor = 'rgba(245,158,11,0.2)';
+            }
 
+            // Panic
             const panicBtn = document.getElementById('btn-panic');
             if (data.panic_mode) {
-                panicBtn.classList.add('active');
-                document.getElementById('panic-text').textContent = "PANIC ACTIVE - UNLOCK";
+                panicBtn.classList.replace('btn-danger', 'btn-primary');
+                panicBtn.style.background = 'var(--danger)';
+                panicBtn.style.color = 'white';
+                document.getElementById('panic-text').textContent = "UNLOCK BOT";
             } else {
-                panicBtn.classList.remove('active');
+                panicBtn.classList.replace('btn-primary', 'btn-danger');
+                panicBtn.style.background = '';
                 document.getElementById('panic-text').textContent = "EMERGENCY STOP";
             }
 
-            // KPIs
-            document.getElementById('ui-symbol').textContent = data.symbol;
-            document.getElementById('ui-price').textContent = formatCurrency(data.ticker.price);
-            document.getElementById('ui-balance').textContent = formatCurrency(data.wallet.balance);
-            
+            // Wallet KPI
+            document.getElementById('kpi-balance').textContent = fmtCurr(data.wallet.balance);
+            document.getElementById('kpi-avail').textContent = `Available: ${fmtCurr(data.wallet.available)}`;
+            document.getElementById('set-cap').textContent = `${fmtCurr(data.risk.capital_per_trade)} / Trade`;
+
+            // Position KPI
             const pos = data.position;
-            const posEl = document.getElementById('ui-pos-size');
-            const posPnlEl = document.getElementById('ui-pos-pnl');
-            
+            const posEl = document.getElementById('kpi-pos');
+            const posSubEl = document.getElementById('kpi-pos-sub');
+            const posBadge = document.getElementById('pos-badge');
+
             if (pos.active) {
+                posBadge.style.display = 'block';
                 posEl.textContent = `${pos.side.toUpperCase()} ${pos.size}x`;
-                posEl.className = 'kpi-val color-up';
+                posEl.className = 'kpi-value up glow-up';
                 
                 const pnl = parseFloat(pos.pnl);
-                const colorClass = pnl >= 0 ? 'color-up' : 'color-down';
-                const sign = pnl >= 0 ? '+' : '';
-                posPnlEl.innerHTML = `Entry: ${formatCurrency(pos.entry_price)} &nbsp;|&nbsp; <span class="${colorClass}">Unrealized: ${sign}${formatCurrency(pnl)}</span>`;
+                posSubEl.innerHTML = `Entry: ${fmtCurr(pos.entry_price)} <br/> <span class="${pnl >= 0 ? 'up' : 'down'}">PNL: ${fmtCurr(pnl)}</span>`;
             } else {
+                posBadge.style.display = 'none';
                 posEl.textContent = "NO POSITION";
-                posEl.className = 'kpi-val color-neutral';
-                posPnlEl.innerHTML = "Scanning for entry conditions...";
+                posEl.className = 'kpi-value';
+                posSubEl.textContent = "Waiting for Entry Signal";
             }
 
-            // Today PnL
+            // Today PnL KPI
             const todayPnl = parseFloat(data.today.pnl);
-            const todayEl = document.getElementById('ui-today-pnl');
-            todayEl.textContent = formatCurrency(todayPnl);
-            todayEl.className = `kpi-val ${todayPnl > 0 ? 'color-up' : (todayPnl < 0 ? 'color-down' : 'color-neutral')}`;
+            const todayEl = document.getElementById('kpi-today-pnl');
+            todayEl.textContent = fmtCurr(todayPnl);
+            todayEl.className = `kpi-value ${todayPnl > 0 ? 'up glow-up' : (todayPnl < 0 ? 'down glow-down' : '')}`;
             
-            document.getElementById('ui-today-trades').textContent = data.today.total_trades;
-            document.getElementById('ui-today-wins').textContent = data.today.wins;
-            document.getElementById('ui-today-losses').textContent = data.today.losses;
+            document.getElementById('kpi-today-trades').textContent = data.today.total_trades;
+            document.getElementById('kpi-wins').textContent = `${data.today.wins}W`;
+            document.getElementById('kpi-losses').textContent = `${data.today.losses}L`;
+            
+            // Winrate KPI
+            let wr = 0;
+            if(data.today.total_trades > 0) wr = (data.today.wins / data.today.total_trades) * 100;
+            const wrEl = document.getElementById('kpi-winrate');
+            wrEl.textContent = `${wr.toFixed(0)}%`;
+            if(wr > 50) wrEl.className = 'kpi-value up glow-up';
+            else if(wr > 0) wrEl.className = 'kpi-value down';
+            else wrEl.className = 'kpi-value';
 
-            // Strategy Params
-            document.getElementById('param-symbol').textContent = data.symbol;
-            document.getElementById('param-tf').textContent = data.timeframe;
-            document.getElementById('param-lev').textContent = `${data.leverage}x Isolated`;
-            document.getElementById('param-start-bal').textContent = formatCurrency(data.bot_state.daily_start_balance);
+            // Parameters
+            document.getElementById('set-symbol').textContent = data.symbol;
+            document.getElementById('set-tf').textContent = data.timeframe;
+            document.getElementById('set-lev').textContent = `${data.leverage}x Isolated`;
+            document.getElementById('set-sl').textContent = `-${data.risk.hard_sl_pct}%`;
+            document.getElementById('set-dd').textContent = `-${data.risk.daily_drawdown_pct}% (24h Lock)`;
 
-            // Trades Table
-            const tbody = document.getElementById('ui-trades-body');
+            // Trades Table (Mini)
+            const miniBody = document.getElementById('mini-trades-body');
+            // Trades Table (Full)
+            const fullBody = document.getElementById('full-trades-body');
+
             if (data.recent_trades && data.recent_trades.length > 0) {
-                tbody.innerHTML = '';
-                data.recent_trades.forEach(t => {
-                    const tr = document.createElement('tr');
+                let miniHtml = '';
+                let fullHtml = '';
+                
+                data.recent_trades.forEach((t, i) => {
                     const isProfit = t.pnl >= 0;
-                    const pnlClass = isProfit ? 'color-up' : 'color-down';
+                    const pClass = isProfit ? 'up' : 'down';
                     const sign = isProfit ? '+' : '';
+                    const pnlStr = t.status === 'CLOSED' ? `${sign}${fmtCurr(t.pnl)}` : '-';
                     
-                    tr.innerHTML = `
-                        <td>${formatTime(t.entry_time)}</td>
-                        <td class="color-up">${t.side}</td>
-                        <td>${formatCurrency(t.entry_price)}</td>
-                        <td>${t.exit_price ? formatCurrency(t.exit_price) : '-'}</td>
-                        <td class="${t.status === 'CLOSED' ? pnlClass : ''}">
-                            ${t.status === 'CLOSED' ? `${sign}${formatCurrency(t.pnl)} (${(t.pnl_pct*100).toFixed(2)}%)` : '-'}
-                        </td>
-                        <td>
-                            <span style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1)">
-                                ${t.status}
-                            </span>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
+                    // Mini Table (top 4)
+                    if (i < 4) {
+                        miniHtml += `
+                        <tr>
+                            <td>${fmtTime(t.entry_time)}</td>
+                            <td class="up">${t.side}</td>
+                            <td>${fmtCurr(t.entry_price)}</td>
+                            <td class="${t.status==='CLOSED'?pClass:''}">${pnlStr}</td>
+                        </tr>`;
+                    }
+
+                    // Full Table
+                    fullHtml += `
+                    <tr>
+                        <td>${fmtTime(t.entry_time)}</td>
+                        <td class="up">${t.side}</td>
+                        <td>${t.size}</td>
+                        <td>${fmtCurr(t.entry_price)}</td>
+                        <td>${t.exit_price ? fmtCurr(t.exit_price) : '-'}</td>
+                        <td class="${t.status==='CLOSED'?pClass:''}">${pnlStr}</td>
+                        <td class="${t.status==='CLOSED'?pClass:''}">${t.status==='CLOSED'?`${(t.pnl_pct*100).toFixed(2)}%`:''}</td>
+                        <td><span class="status-badge">${t.status}</span></td>
+                        <td style="color:var(--text-muted)">${t.close_reason || '-'}</td>
+                    </tr>`;
                 });
+                
+                miniBody.innerHTML = miniHtml;
+                fullBody.innerHTML = fullHtml;
             }
 
-            // Logs
-            const logsEl = document.getElementById('ui-logs-body');
+            // Terminal Logs
+            const term = document.getElementById('terminal-body');
             if (data.recent_logs && data.recent_logs.length > 0) {
-                const isScrolledToBottom = logsEl.scrollHeight - logsEl.clientHeight <= logsEl.scrollTop + 10;
+                const isBottom = term.scrollHeight - term.clientHeight <= term.scrollTop + 10;
+                term.innerHTML = '';
                 
-                logsEl.innerHTML = '';
                 data.recent_logs.slice().reverse().forEach(l => {
-                    const div = document.createElement('div');
-                    div.className = 'log-line';
-                    div.innerHTML = `
-                        <span class="log-time">${formatTime(l.timestamp)}</span>
-                        <span class="log-type ${l.event_type}">${l.event_type}</span>
-                        <span class="log-msg">${l.message}</span>
-                    `;
-                    logsEl.appendChild(div);
+                    let color = 'var(--text-muted)';
+                    if(l.event_type.includes('ENTRY')) color = 'var(--success)';
+                    if(l.event_type.includes('EXIT')) color = 'var(--warning)';
+                    if(l.event_type.includes('ERROR') || l.event_type.includes('BLOCK')) color = 'var(--danger)';
+                    
+                    term.innerHTML += `
+                    <div class="log-row">
+                        <span class="l-time">${fmtTime(l.timestamp).substring(6)}</span>
+                        <span class="l-type" style="color:${color}">${l.event_type}</span>
+                        <span class="l-msg">${l.message}</span>
+                    </div>`;
                 });
-
-                if (isScrolledToBottom) {
-                    logsEl.scrollTop = logsEl.scrollHeight;
-                }
+                
+                if (isBottom) term.scrollTop = term.scrollHeight;
             }
         }
 
+        // Actions
         async function togglePanic() {
-            if(!confirm("Are you sure you want to toggle EMERGENCY STOP? This will freeze the bot immediately.")) return;
-            
+            if(!confirm("CONFIRM EMERGENCY STOP?\nThis will freeze all bot activities immediately.")) return;
             try {
                 await fetch('/api/panic', { method: 'POST' });
                 fetchStatus();
-            } catch(e) {
-                alert("Failed to toggle panic mode.");
-            }
+            } catch(e) { alert("Action failed."); }
         }
 
-        // Auto Refresh
+        async function syncWallet() {
+            document.getElementById('sync-overlay').style.display = 'flex';
+            try {
+                await fetch('/api/refresh', { method: 'POST' });
+                await fetchStatus();
+            } catch(e) { console.error(e); }
+            setTimeout(() => { document.getElementById('sync-overlay').style.display = 'none'; }, 500);
+        }
+
+        // Init
         fetchStatus();
-        setInterval(fetchStatus, 3000); // 3 second update
+        setInterval(fetchStatus, 3000);
     </script>
 </body>
 </html>
