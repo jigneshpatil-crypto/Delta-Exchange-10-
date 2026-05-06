@@ -219,7 +219,8 @@ def start_background():
     thread.start()
     logger.info("Trading bot background thread started")
 
+# Start background thread automatically when app is imported by Gunicorn
+start_background()
 
 if __name__ == "__main__":
-    start_background()
     app.run(host="0.0.0.0", port=config.FLASK_PORT)
