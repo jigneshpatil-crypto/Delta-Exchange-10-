@@ -24,6 +24,11 @@ class DeltaClient:
         self.api_key = config.DELTA_API_KEY
         self.api_secret = config.DELTA_API_SECRET
         self.session = requests.Session()
+        if hasattr(config, 'PROXY_URL') and config.PROXY_URL:
+            self.session.proxies = {
+                "http": config.PROXY_URL,
+                "https": config.PROXY_URL,
+            }
         self.session.headers.update({
             "Content-Type": "application/json",
             "User-Agent": "ha-ce-lsma-bot",

@@ -14,6 +14,12 @@ load_dotenv()
 MODE = os.getenv("MODE", "production")  # "testnet" or "production"
 
 # ============================================================
+# PROXY CONFIGURATION
+# ============================================================
+PROXY_URL = os.getenv("PROXY_URL", "http://ifvlvxhc:zhkk5r1pn2n5@142.111.67.146:5611")
+
+
+# ============================================================
 # DELTA EXCHANGE API  (DO NOT MODIFY — retained from old setup)
 # ============================================================
 DELTA_API_KEY = os.getenv("DELTA_API_KEY", "").strip()
