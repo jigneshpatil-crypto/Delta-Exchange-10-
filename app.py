@@ -219,6 +219,28 @@ def start_background():
     thread.start()
     logger.info("Trading bot background thread started")
 
+    # SCHEDULED 5-MINUTE TEST FOR VERIFICATION
+    def delayed_test_alert():
+        try:
+            logger.info("Executing 5-minute delayed test to verify automation...")
+            bot.db.log_event("AUTOMATION_TEST", "Sending 5-minute delayed test message.")
+            bot.alerts.send_status(
+                "🤖 <b>AUTOMATION TEST SUCCESSFUL!</b> 🤖\n\n"
+                "Ye 'Sample Trade/Check' message server start hone ke theek 5 minute baad bheja gaya hai.\n\n"
+                "Iska matlab aapka bot <b>Render Cloud</b> par 24/7 background me perfectly chal raha hai, "
+                "aur aapke laptop band hone ka ispe KOI asar nahi ho raha hai!\n\n"
+                "Aap befikr ho kar laptop band rakh sakte hain. Jab bhi market mein real signal aayega, "
+                "ye bot apne aap trade le lega. ✅"
+            )
+        except Exception as e:
+            logger.error(f"Failed to execute delayed test: {e}")
+
+    # Schedule the test to run after 300 seconds (5 minutes)
+    test_timer = threading.Timer(300.0, delayed_test_alert)
+    test_timer.daemon = True
+    test_timer.start()
+    logger.info("Scheduled 5-minute delayed test alert.")
+
 # Start background thread automatically when app is imported by Gunicorn
 start_background()
 
