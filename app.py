@@ -219,25 +219,24 @@ def start_background():
     thread.start()
     logger.info("Trading bot background thread started")
 
-    # SCHEDULED 5-MINUTE TEST FOR VERIFICATION (TEST 2)
-    def delayed_test_alert():
-        try:
-            logger.info("Executing 5-minute delayed test (Test 2) to verify automation...")
-            bot.db.log_event("AUTOMATION_TEST_2", "Sending 5-minute delayed test message (Test 2).")
-            bot.alerts.send_status(
-                "🤖 <b>AUTOMATION TEST #2 SUCCESSFUL!</b> 🤖\n\n"
-                "Aapne dobara test karne bola tha, aur ye raha result! Ye message server restart hone ke theek 5 minute baad aaya hai.\n\n"
-                "Aapka bot <b>Render Cloud</b> par perfectly chal raha hai. Aap abhi laptop band kar diye honge aur fir bhi ye background me run kar raha hai!\n\n"
-                "System 100% cloud par independent hai. ✅"
-            )
-        except Exception as e:
-            logger.error(f"Failed to execute delayed test: {e}")
+    # SCHEDULED 5-MINUTE TEST FOR VERIFICATION (Test 2) - DISABLED
+    # def delayed_test_alert():
+    #     try:
+    #         logger.info("Executing 5-minute delayed test (Test 2) to verify automation...")
+    #         bot.db.log_event("AUTOMATION_TEST_2", "Sending 5-minute delayed test message (Test 2).")
+    #         bot.alerts.send_status(
+    #             "🤖 <b>AUTOMATION TEST #2 SUCCESSFUL!</b> 🤖\n\n"
+    #             "Aapne dobara test karne bola tha, aur ye raha result! Ye message server restart hone ke theek 5 minute baad aaya hai.\n\n"
+    #             "Aapka bot <b>Render Cloud</b> par perfectly chal raha hai. Aap abhi laptop band kar diye honge aur fir bhi ye background me run kar raha hai!\n\n"
+    #             "System 100% cloud par independent hai. ✅"
+    #         )
+    #     except Exception as e:
+    #         logger.error(f"Failed to execute delayed test: {e}")
 
-    # Schedule the test to run after 300 seconds (5 minutes)
-    test_timer = threading.Timer(300.0, delayed_test_alert)
-    test_timer.daemon = True
-    test_timer.start()
-    logger.info("Scheduled 5-minute delayed test alert (Test 2).")
+    # test_timer = threading.Timer(300.0, delayed_test_alert)
+    # test_timer.daemon = True
+    # test_timer.start()
+    # logger.info("Scheduled 5-minute delayed test alert (Test 2).")
 
 # Start background thread automatically when app is imported by Gunicorn
 start_background()

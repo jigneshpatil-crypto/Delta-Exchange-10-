@@ -1,0 +1,89 @@
+//@version=5
+strategy("Heikin-Ashi + Chandelier Exit + LSMA Filter", overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=100)
+
+// =========================================================================
+// INPUTS
+// =========================================================================
+ce_length = input.int(22, title="Chandelier Exit ATR Period")
+ce_mult = input.float(3.0, title="Chandelier Exit ATR Multiplier")
+lsma_length = input.int(25, title="LSMA Period")
+sl_pct = input.float(8.0, title="Hard Stop Loss (%)")
+
+// =========================================================================
+// 1. HEIKIN-ASHI
+// =========================================================================
+ha_ticker = ticker.heikinashi(syminfo.tickerid)
+ha_open = request.security(ha_ticker, timeframe.period, open)
+ha_close = request.security(ha_ticker, timeframe.period, close)
+ha_is_red = ha_close < ha_open
+
+// =========================================================================
+// 2. LSMA
+// =========================================================================
+lsma = ta.linreg(close, lsma_length, 0)
+plot(lsma, color=color.new(color.blue, 0), title="LSMA 25", linewidth=2)
+
+// =========================================================================
+// 3. CHANDELIER EXIT
+// =========================================================================
+atr = ta.atr(ce_length)
+
+// Highest High and Lowest Low over ce_length
+highest_high = ta.highest(high, ce_length)
+lowest_low = ta.lowest(low, ce_length)
+
+long_stop = highest_high - atr * ce_mult
+short_stop = lowest_low + atr * ce_mult
+
+var float ce_long_stop = na
+var float ce_short_stop = na
+var int direction = 1
+
+ce_long_stop := close[1] > ce_long_stop[1] ? math.max(long_stop, ce_long_stop[1]) : long_stop
+ce_short_stop := close[1] < ce_short_stop[1] ? math.min(short_stop, ce_short_stop[1]) : short_stop
+
+direction := na(direction[1]) ? 1 : direction[1]
+direction := direction == 1 ? (close < ce_long_stop ? -1 : 1) : (close > ce_short_stop ? 1 : -1)
+
+// Detect flip for BUY signal
+ce_buy_signal = direction == 1 and direction[1] == -1
+
+// Plot Chandelier Exit Stops
+plot(direction == 1 ? ce_long_stop : na, title="CE Long Stop", color=color.green, style=plot.style_linebr, linewidth=2)
+plot(direction == -1 ? ce_short_stop : na, title="CE Short Stop", color=color.red, style=plot.style_linebr, linewidth=2)
+
+// =========================================================================
+// STRATEGY LOGIC
+// =========================================================================
+// Entry Condition (LONG ONLY)
+// Chandelier Exit flips GREEN AND Close > LSMA
+long_entry_cond = ce_buy_signal and close > lsma
+
+// Exit Condition (Close Long)
+// Heikin-Ashi candle is RED AND Close < LSMA
+long_exit_cond = ha_is_red and close < lsma
+
+var float stop_loss_price = na
+
+// Strategy Execution
+if long_entry_cond and strategy.position_size == 0
+    strategy.entry("Long", strategy.long)
+    stop_loss_price := close * (1 - sl_pct / 100)
+
+if strategy.position_size > 0
+    if long_exit_cond
+        strategy.close("Long", comment="HA Red + Below LSMA")
+        stop_loss_price := na
+    else
+        strategy.exit("SL", "Long", stop=stop_loss_price, comment="Hard SL Hit")
+
+// =========================================================================
+// ALERTS & SIGNALS FOR CHART
+// =========================================================================
+// Plot BUY and EXIT labels on the chart
+plotshape(long_entry_cond, title="Buy Signal", text="BUY", location=location.belowbar, style=shape.labelup, size=size.small, color=color.green, textcolor=color.white)
+plotshape(strategy.position_size > 0 and long_exit_cond, title="Exit Signal", text="EXIT", location=location.abovebar, style=shape.labeldown, size=size.small, color=color.red, textcolor=color.white)
+
+// Setting up Webhook Alerts (If you want to connect PineScript directly to your Bot later)
+alertcondition(long_entry_cond, title="Buy Signal Alert", message='{"action": "buy", "symbol": "{{ticker}}", "price": "{{close}}"}')
+alertcondition(long_exit_cond, title="Exit Signal Alert", message='{"action": "sell", "symbol": "{{ticker}}", "price": "{{close}}"}')

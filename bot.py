@@ -186,14 +186,15 @@ class TradingBot:
         logger.info(f"  Daily Drawdown: {config.MAX_DAILY_DRAWDOWN*100}%")
         logger.info(f"  Lock Duration: {config.DAILY_LOCK_HOURS}h")
 
-        # Step 6: Sample trade
-        sample_success, sample_log = self.run_sample_trade()
+        # Step 6: Sample trade (DISABLED)
+        # sample_success, sample_log = self.run_sample_trade()
+        sample_success, sample_log = True, "Sample trade has been disabled."
 
         # Send deployment report via Telegram
         self.alerts.send_deployment_alert(
             old_removed=old_removed,
             new_deployed=new_deployed,
-            sample_result=sample_log if sample_success else "⚠️ Sample trade skipped/failed",
+            sample_result=sample_log,
         )
 
         self._deployed = True

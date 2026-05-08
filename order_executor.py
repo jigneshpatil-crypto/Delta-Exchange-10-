@@ -33,7 +33,7 @@ class OrderExecutor:
         For BUY:  price + 0.05%  (slightly above to help fill)
         For SELL: price - 0.05%  (slightly below to help fill)
         """
-        buffer = config.MARKET_BUFFER_PCT
+        buffer = config.LIMIT_BUFFER_PCT
         if side == "buy":
             return round(signal_close_price * (1 + buffer), 2)
         else:
