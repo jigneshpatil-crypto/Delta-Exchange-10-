@@ -65,7 +65,6 @@ class OrderExecutor:
             size=size,
             order_type="market_order",
             time_in_force="ioc",
-            time_in_force="gtc",
         )
 
         if not order:
