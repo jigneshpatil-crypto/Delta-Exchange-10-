@@ -194,14 +194,17 @@ class OrderExecutor:
             f"(-{config.HARD_STOP_LOSS_PCT*100}%)"
         )
 
-        # Place stop-market sell order
-        # Delta Exchange uses stop_market_order or stop_limit_order
-        # We'll use a market order with stop trigger
+        # Place stop-limit sell order
+        # Delta Exchange uses stop_limit_order or stop_market_order
+        # We'll use a limit order slightly below the stop trigger
+        sl_limit_price = round(sl_price * 0.998, 2)  # 0.2% below SL for fill assurance
+
         payload = {
             "product_id": product_id,
             "side": "sell",
             "size": size,
-            "order_type": "market_order",
+            "order_type": "limit_order",
+            "limit_price": str(sl_limit_price),
             "stop_price": str(sl_price),
             "stop_order_type": "stop_loss_order",
             "time_in_force": "gtc",
@@ -225,13 +228,28 @@ class OrderExecutor:
                     self._hard_sl_order_id = result.get("id")
                     logger.info(
                         f"✅ Hard SL placed — Order ID: {self._hard_sl_order_id}, "
-                        f"Trigger (Market): ${sl_price}"
+                        f"Trigger: ${sl_price}, Limit: ${sl_limit_price}"
                     )
                     return
             logger.warning(f"Hard SL order may not have been placed: {resp.text}")
         except Exception as e:
             logger.error(f"Failed to place hard SL: {e}")
-            logger.error("Hard SL fallback skipped (market orders only)")
+            # Fallback: place regular limit order at SL price
+            try:
+                order = self.client.place_order(
+                    product_id=product_id,
+                    side="sell",
+                    size=size,
+                    order_type="limit_order",
+                    limit_price=sl_price,
+                )
+                if order:
+                    self._hard_sl_order_id = order.get("id")
+                    logger.info(
+                        f"✅ Hard SL fallback placed — ID: {self._hard_sl_order_id}"
+                    )
+            except Exception as e2:
+                logger.error(f"Hard SL fallback also failed: {e2}")
 
     def cancel_hard_stop_loss(self, product_id):
         """Cancel the hard stop-loss order (when indicator exit triggers first)."""
