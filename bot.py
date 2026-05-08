@@ -1,6 +1,6 @@
 """
 Heikin-Ashi + Chandelier Exit + LSMA Filter — Main Trading Bot
-LONG ONLY on BTC/USDT 5m. All orders are LIMIT. Pyramiding = 1.
+LONG ONLY on BTC/USDT 5m. All orders are MARKET. Pyramiding = 1.
 
 Entry: Chandelier Exit flips GREEN AND Close > LSMA 25
 Exit:  Heikin-Ashi turns RED AND Close < LSMA 25
@@ -179,8 +179,8 @@ class TradingBot:
 
         # Step 4 & 5 already enforced in code
         logger.info("STEP 4: Execution rules enforced:")
-        logger.info("  Order Type: LIMIT ONLY")
-        logger.info(f"  Entry Timeout: {config.ORDER_TIMEOUT_MINUTES} min")
+        logger.info("  Order Type: MARKET ONLY")
+        logger.info("  Entry Timeout: None (Market orders)")
         logger.info(f"  Hard SL: {config.HARD_STOP_LOSS_PCT*100}%")
         logger.info("STEP 5: Risk management active:")
         logger.info(f"  Daily Drawdown: {config.MAX_DAILY_DRAWDOWN*100}%")
@@ -385,7 +385,7 @@ class TradingBot:
                         time.sleep(config.POLL_INTERVAL_SECONDS)
                         continue
 
-                    # Execute LIMIT BUY entry
+                    # Execute MARKET BUY entry
                     success, order, msg = self.executor.execute_entry(
                         self.product_id, size, current_price
                     )
@@ -402,7 +402,7 @@ class TradingBot:
                     else:
                         logger.error("❌ Entry failed: %s", msg)
                         self.db.log_event("ENTRY_FAIL", msg)
-                        self.alerts.send_order_timeout_alert("entry")
+                        # No timeout alert for market orders
 
                 # -------- 7. Sleep --------
                 time.sleep(config.POLL_INTERVAL_SECONDS)

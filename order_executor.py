@@ -1,7 +1,7 @@
 """
 Heikin-Ashi + Chandelier Exit + LSMA Filter — Order Executor
-ALL TRADES (entry + exit) are executed as LIMIT ORDERS ONLY.
-No market orders allowed. 15-minute timeout on unfilled entries.
+ALL TRADES (entry + exit) are executed as MARKET ORDERS ONLY.
+No limit orders allowed. 15-minute timeout on unfilled entries.
 """
 
 import time
@@ -14,7 +14,7 @@ logger = logging.getLogger("OrderExecutor")
 
 
 class OrderExecutor:
-    """Handles limit-order-only execution with timeout/cancel logic."""
+    """Handles market-order-only execution with timeout/cancel logic."""
 
     def __init__(self, delta_client, database, alerts):
         self.client = delta_client
@@ -25,7 +25,7 @@ class OrderExecutor:
         self._hard_sl_order_id = None
 
     # ---------------------------------------------------------------
-    # CALCULATE LIMIT PRICE
+    # CALCULATE MARKET PRICE
     # ---------------------------------------------------------------
     def _calc_limit_price(self, signal_close_price, side):
         """
@@ -33,18 +33,18 @@ class OrderExecutor:
         For BUY:  price + 0.05%  (slightly above to help fill)
         For SELL: price - 0.05%  (slightly below to help fill)
         """
-        buffer = config.LIMIT_BUFFER_PCT
+        buffer = config.MARKET_BUFFER_PCT
         if side == "buy":
             return round(signal_close_price * (1 + buffer), 2)
         else:
             return round(signal_close_price * (1 - buffer), 2)
 
     # ---------------------------------------------------------------
-    # ENTRY — LIMIT ORDER ONLY
+    # ENTRY — MARKET ORDER ONLY
     # ---------------------------------------------------------------
     def execute_entry(self, product_id, size, signal_close_price):
         """
-        Place a LIMIT BUY order at the signal close price.
+        Place a MARKET BUY order at the signal close price.
         Side is always 'buy' (LONG only strategy).
 
         Returns:
@@ -54,7 +54,7 @@ class OrderExecutor:
         limit_price = self._calc_limit_price(signal_close_price, side)
 
         logger.info(
-            f"🎯 Placing LIMIT {side.upper()} entry: "
+            f"🎯 Placing MARKET {side.upper()} entry: "
             f"size={size}, price=${limit_price} "
             f"(signal close=${signal_close_price})"
         )
@@ -63,8 +63,8 @@ class OrderExecutor:
             product_id=product_id,
             side=side,
             size=size,
-            order_type="limit_order",
-            limit_price=limit_price,
+            order_type="market_order",
+            time_in_force="ioc",
             time_in_force="gtc",
         )
 
@@ -75,12 +75,12 @@ class OrderExecutor:
         self._pending_entry_order_id = order_id
         self._pending_entry_time = time.time()
 
-        logger.info(f"📋 Limit entry order placed — ID: {order_id}, "
+        logger.info(f"📋 Market entry order placed — ID: {order_id}, "
                      f"Price: ${limit_price}")
 
         # Now wait and poll for fill (up to 15 minutes / 900 seconds)
         filled, fill_data = self._wait_for_fill(
-            order_id, product_id, timeout_seconds=config.ORDER_TIMEOUT_SECONDS
+            order_id, product_id, timeout_seconds=15
         )
 
         if filled:
@@ -262,11 +262,11 @@ class OrderExecutor:
             self._hard_sl_order_id = None
 
     # ---------------------------------------------------------------
-    # EXIT — LIMIT ORDER ONLY (indicator-based)
+    # EXIT — MARKET ORDER ONLY (indicator-based)
     # ---------------------------------------------------------------
     def execute_exit(self, product_id, current_price, reason="Indicator exit"):
         """
-        Close the current LONG position via LIMIT SELL order.
+        Close the current LONG position via MARKET SELL order.
         Cancel the hard SL first, then place a limit sell.
 
         Returns:
@@ -287,7 +287,7 @@ class OrderExecutor:
         limit_price = self._calc_limit_price(current_price, "sell")
 
         logger.info(
-            f"🔒 Placing LIMIT EXIT: SELL {size} @ ${limit_price} "
+            f"🔒 Placing MARKET EXIT: SELL {size} @ ${limit_price} "
             f"(reason: {reason})"
         )
 
@@ -295,8 +295,8 @@ class OrderExecutor:
             product_id=product_id,
             side="sell",
             size=size,
-            order_type="limit_order",
-            limit_price=limit_price,
+            order_type="market_order",
+            time_in_force="ioc",
         )
 
         if not order:
@@ -309,8 +309,8 @@ class OrderExecutor:
                 product_id=product_id,
                 side="sell",
                 size=size,
-                order_type="limit_order",
-                limit_price=aggressive_price,
+                order_type="market_order",
+                time_in_force="ioc",
             )
             if not order:
                 return False, None, "Failed to place limit exit order"
@@ -318,7 +318,7 @@ class OrderExecutor:
         order_id = order.get("id")
 
         # Wait for exit fill (give 2 minutes, then retry at worse price)
-        filled, fill_data = self._wait_for_fill(order_id, product_id, timeout_seconds=120)
+        filled, fill_data = self._wait_for_fill(order_id, product_id, timeout_seconds=15)
 
         if filled:
             exit_price = float(fill_data.get("average_fill_price", limit_price))
@@ -333,12 +333,12 @@ class OrderExecutor:
                 product_id=product_id,
                 side="sell",
                 size=size,
-                order_type="limit_order",
-                limit_price=aggressive_price,
+                order_type="market_order",
+                time_in_force="ioc",
             )
             if order2:
                 filled2, fill_data2 = self._wait_for_fill(
-                    order2.get("id"), product_id, timeout_seconds=120
+                    order2.get("id"), product_id, timeout_seconds=15
                 )
                 if filled2:
                     exit_price = float(
@@ -376,7 +376,7 @@ class OrderExecutor:
         )
 
         logger.info(
-            f"🔒 Trade closed via LIMIT: {side.upper()} "
+            f"🔒 Trade closed via MARKET: {side.upper()} "
             f"Entry: ${entry_price} → Exit: ${exit_price}, "
             f"P&L: {pnl_pct*100:.2f}%, Reason: {reason}"
         )
@@ -424,8 +424,8 @@ class OrderExecutor:
             product_id=product_id,
             side="buy",
             size=size,
-            order_type="limit_order",
-            limit_price=buy_price,
+            order_type="market_order",
+            time_in_force="ioc",
         )
 
         if not buy_order:
@@ -434,7 +434,7 @@ class OrderExecutor:
         buy_id = buy_order.get("id")
 
         # Wait for fill (max 60 seconds for sample)
-        filled, fill_data = self._wait_for_fill(buy_id, product_id, timeout_seconds=60)
+        filled, fill_data = self._wait_for_fill(buy_id, product_id, timeout_seconds=15)
         if not filled:
             self.client.cancel_order(buy_id, product_id)
             return False, "Sample BUY not filled in 60s — cancelled"
@@ -450,15 +450,15 @@ class OrderExecutor:
             product_id=product_id,
             side="sell",
             size=size,
-            order_type="limit_order",
-            limit_price=sell_price,
+            order_type="market_order",
+            time_in_force="ioc",
         )
 
         if not sell_order:
             return False, "Sample SELL order failed"
 
         sell_id = sell_order.get("id")
-        filled2, fill_data2 = self._wait_for_fill(sell_id, product_id, timeout_seconds=60)
+        filled2, fill_data2 = self._wait_for_fill(sell_id, product_id, timeout_seconds=15)
         if not filled2:
             self.client.cancel_order(sell_id, product_id)
             return False, "Sample SELL not filled in 60s — cancelled"

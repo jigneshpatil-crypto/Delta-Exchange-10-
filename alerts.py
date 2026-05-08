@@ -73,8 +73,8 @@ class AlertSystem:
             f"<b>LSMA:</b> Period {config.LSMA_PERIOD}\n"
             f"<b>Heikin-Ashi:</b> Candle color for exit\n\n"
             f"<b>EXECUTION RULES</b>\n"
-            f"<b>Order Type:</b> LIMIT ONLY (no market orders)\n"
-            f"<b>Entry Timeout:</b> {config.ORDER_TIMEOUT_MINUTES} min auto-cancel\n"
+            f"<b>Order Type:</b> MARKET ONLY (instant execution)\n"
+            f"<b>Entry Timeout:</b> None (Market Orders)\n"
             f"<b>Hard SL:</b> {config.HARD_STOP_LOSS_PCT*100}% (emergency)\n"
             f"<b>Pyramiding:</b> {config.PYRAMIDING} (strict)\n\n"
             f"<b>RISK MANAGEMENT</b>\n"
@@ -179,7 +179,7 @@ class AlertSystem:
         self._send(
             f"<b>⏰ ORDER TIMED OUT — CANCELLED</b>\n\n"
             f"<b>Type:</b> {order_type.upper()}\n"
-            f"<b>Timeout:</b> {config.ORDER_TIMEOUT_MINUTES} minutes\n"
+            f"<b>Timeout:</b> Order execution failed\n"
             f"<b>Action:</b> Order cancelled, not chasing price\n\n"
             f"<i>{self._timestamp()}</i>"
         )

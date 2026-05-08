@@ -62,12 +62,12 @@ LSMA_PERIOD = 25                # LSMA lookback period
 #   AND Close Price < LSMA 25
 
 # ============================================================
-# ORDER EXECUTION — LIMIT ORDERS ONLY
+# ORDER EXECUTION — MARKET ORDERS ONLY
 # ============================================================
-ORDER_TYPE = "limit_order"       # NO MARKET ORDERS ALLOWED
-LIMIT_BUFFER_PCT = 0.0005       # 0.05% buffer on limit price for fill assurance
-ORDER_TIMEOUT_MINUTES = 15      # Cancel unfilled entry order after 15 min (3x 5m candles)
-ORDER_TIMEOUT_SECONDS = ORDER_TIMEOUT_MINUTES * 60  # 900 seconds
+ORDER_TYPE = "market_order"       # MARKET ORDERS ONLY
+LIMIT_BUFFER_PCT = 0.0005       # 0.05% buffer (kept for SL calculation if needed)
+ORDER_TIMEOUT_MINUTES = 0       # Not used for market orders
+ORDER_TIMEOUT_SECONDS = 0       # Not used for market orders
 
 # ============================================================
 # RISK MANAGEMENT
