@@ -34,14 +34,52 @@ def dashboard():
 # ---------------------------------------------------------------
 # API Endpoints (JSON)
 # ---------------------------------------------------------------
+last_dead_alert_time = 0
+
 @app.route("/health")
 def health():
+    global last_dead_alert_time
+    status = "ok"
+    http_code = 200
+    
+    try:
+        # Check if bot has fetched a candle recently (within 15 minutes)
+        state = bot.db.get_bot_state() if hasattr(bot, 'db') else None
+        if state and state.get("last_candle_time"):
+            last_time = state["last_candle_time"]
+            if isinstance(last_time, str):
+                last_time = datetime.fromisoformat(last_time.replace('Z', '+00:00'))
+            
+            # Ensure it has timezone
+            if last_time.tzinfo is None:
+                last_time = last_time.replace(tzinfo=timezone.utc)
+                
+            now = datetime.now(timezone.utc)
+            diff_minutes = (now - last_time).total_seconds() / 60
+            
+            if diff_minutes > 15:
+                status = f"stuck (last update {int(diff_minutes)} mins ago)"
+                http_code = 500
+                
+                # Send Telegram alert once every 30 minutes to avoid spam
+                current_time = time.time()
+                if current_time - last_dead_alert_time > 1800:
+                    bot.alerts.send_error(
+                        f"🚨 <b>URGENT: BOT IS STUCK / OFFLINE!</b> 🚨\n\n"
+                        f"The bot hasn't processed market data for {int(diff_minutes)} minutes.\n"
+                        f"The background thread might have crashed or stopped.\n"
+                        f"Please check your server immediately."
+                    )
+                    last_dead_alert_time = current_time
+    except Exception as e:
+        logger.error(f"Health check error: {e}")
+
     return jsonify({
-        "status": "ok",
+        "status": status,
         "mode": config.MODE,
         "strategy": config.STRATEGY_NAME,
-        "uptime": "running",
-    })
+        "uptime": "running" if http_code == 200 else "error",
+    }), http_code
 
 
 @app.route("/api/status")
