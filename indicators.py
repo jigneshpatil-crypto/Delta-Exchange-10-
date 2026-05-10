@@ -288,8 +288,9 @@ def get_current_signal(df):
     if df is None or len(df) < 2:
         return {"signal": None, "reason": "Insufficient data"}
 
-    latest = df.iloc[-1]
-    prev = df.iloc[-2]
+    # Evaluate the last closed candle (index -2) since index -1 is the current incomplete candle
+    latest = df.iloc[-2]
+    prev = df.iloc[-3] if len(df) >= 3 else df.iloc[-2]
     close = float(latest["close"])
     lsma = float(latest["lsma"]) if not np.isnan(latest["lsma"]) else None
     ha_color = latest["ha_color"]
