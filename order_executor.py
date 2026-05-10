@@ -68,7 +68,7 @@ class OrderExecutor:
         )
 
         if not order:
-            return False, None, "Failed to place limit entry order"
+            return False, None, "Failed to place market entry order"
 
         order_id = order.get("id")
         self._pending_entry_order_id = order_id

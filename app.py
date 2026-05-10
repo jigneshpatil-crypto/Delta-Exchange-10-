@@ -57,20 +57,29 @@ def health():
             now = datetime.now(timezone.utc)
             diff_minutes = (now - last_time).total_seconds() / 60
             
+            # Check if bot is locked (drawdown protection) — this is normal, not an error
+            is_locked = state.get("is_locked", False)
+            
             if diff_minutes > 15:
-                status = f"stuck (last update {int(diff_minutes)} mins ago)"
-                http_code = 500
-                
-                # Send Telegram alert once every 30 minutes to avoid spam
-                current_time = time.time()
-                if current_time - last_dead_alert_time > 1800:
-                    bot.alerts.send_error(
-                        f"🚨 <b>URGENT: BOT IS STUCK / OFFLINE!</b> 🚨\n\n"
-                        f"The bot hasn't processed market data for {int(diff_minutes)} minutes.\n"
-                        f"The background thread might have crashed or stopped.\n"
-                        f"Please check your server immediately."
-                    )
-                    last_dead_alert_time = current_time
+                if is_locked:
+                    # Bot is locked by drawdown protection — not a crash
+                    status = f"locked (drawdown protection active)"
+                    # Still return 200 so Render doesn't restart the service
+                    http_code = 200
+                else:
+                    status = f"stuck (last update {int(diff_minutes)} mins ago)"
+                    http_code = 500
+                    
+                    # Send Telegram alert once every 30 minutes to avoid spam
+                    current_time = time.time()
+                    if current_time - last_dead_alert_time > 1800:
+                        bot.alerts.send_error(
+                            f"🚨 <b>URGENT: BOT IS STUCK / OFFLINE!</b> 🚨\n\n"
+                            f"The bot hasn't processed market data for {int(diff_minutes)} minutes.\n"
+                            f"The background thread might have crashed or stopped.\n"
+                            f"Please check your server immediately."
+                        )
+                        last_dead_alert_time = current_time
     except Exception as e:
         logger.error(f"Health check error: {e}")
 

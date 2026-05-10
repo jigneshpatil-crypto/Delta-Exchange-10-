@@ -275,6 +275,16 @@ class TradingBot:
                 # Check if locked (30% daily drawdown)
                 if self.risk.is_locked():
                     logger.warning("🔒 Bot paused — 30% daily drawdown limit")
+                    # Still fetch candles to keep last_candle_time fresh
+                    # so the health check doesn't think the bot is dead
+                    try:
+                        df_lock = self._fetch_and_prepare_candles()
+                        if df_lock is not None and len(df_lock) > 0:
+                            lt = df_lock["timestamp"].iloc[-1]
+                            ct = datetime.fromtimestamp(lt, tz=timezone.utc)
+                            self.db.set_last_candle_time(ct.isoformat())
+                    except Exception:
+                        pass
                     time.sleep(60)
                     continue
 
@@ -323,6 +333,15 @@ class TradingBot:
                 # -------- 4. Daily reset & drawdown check --------
                 wallet = self.client.get_wallet_balance()
                 balance = wallet.get("available_balance", 0)
+
+                # Guard: ignore $0 balance from API glitches
+                if balance <= 0:
+                    logger.warning(
+                        "⚠️ Wallet returned $0 balance — likely API glitch, skipping drawdown check"
+                    )
+                    time.sleep(config.POLL_INTERVAL_SECONDS)
+                    continue
+
                 self.risk.check_daily_reset(balance)
 
                 if self.risk.check_drawdown(balance):
