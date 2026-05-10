@@ -144,10 +144,19 @@ class RiskManager:
         """
         Calculate position size.
         Capital per trade: $10 (or 100% of available balance if < $10).
-        Leverage: 10x Isolated.
+        Leverage: 50x Isolated.
 
-        Notional = min($10, balance) * 10x = up to $100 notional
-        Size in contracts = Notional (Delta uses $1/contract for BTCUSDT)
+        Delta Exchange India BTCUSD:
+            1 contract = 0.001 BTC
+            Contract value in USD = current_price * 0.001
+
+        Notional = min($10, balance) * leverage
+        Size in contracts = Notional / (current_price * 0.001)
+
+        Example at BTC=$80,000, $10 capital, 50x leverage:
+            Notional = $10 * 50 = $500
+            Contract value = $80,000 * 0.001 = $80
+            Size = $500 / $80 = 6 contracts
 
         Returns:
             (size_contracts: int, margin_used: float, notional: float)
@@ -158,10 +167,11 @@ class RiskManager:
 
         # Use $10 or entire balance if less
         capital = min(config.CAPITAL_PER_TRADE, current_balance)
-        notional = capital * config.LEVERAGE  # $10 * 10x = $100
+        notional = capital * config.LEVERAGE  # $10 * 50x = $500
 
-        # Delta Exchange BTCUSDT: 1 contract ≈ $1 notional
-        size_contracts = int(notional)
+        # Delta Exchange BTCUSD: 1 contract = 0.001 BTC
+        contract_value_usd = current_price * 0.001
+        size_contracts = int(notional / contract_value_usd)
 
         # Ensure minimum size of 1
         if size_contracts < 1:
@@ -174,6 +184,7 @@ class RiskManager:
             f"Capital: ${capital:.2f}, "
             f"Leverage: {config.LEVERAGE}x, "
             f"Notional: ${notional:.2f}, "
+            f"Contract value: ${contract_value_usd:.2f}, "
             f"Size: {size_contracts} contracts"
         )
 

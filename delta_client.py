@@ -447,13 +447,14 @@ class DeltaClient:
     # Leverage
     # ---------------------------------------------------------------
     def set_leverage(self, product_id, leverage=None):
-        """Set leverage for a product."""
+        """Set leverage for a product.
+        POST /v2/products/{product_id}/orders/leverage
+        """
         leverage = leverage or config.LEVERAGE
         payload = {
-            "product_id": product_id,
             "leverage": str(leverage),
         }
-        return self._post("/v2/orders/leverage", payload)
+        return self._post(f"/v2/products/{product_id}/orders/leverage", payload)
 
     def get_leverage(self, product_id):
         """Get current leverage for a product."""

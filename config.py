@@ -72,10 +72,10 @@ ORDER_TIMEOUT_SECONDS = 0       # Not used for market orders
 # ============================================================
 # RISK MANAGEMENT
 # ============================================================
-LEVERAGE = 10                   # 10x Isolated leverage
+LEVERAGE = 50                   # 50x Isolated leverage (max profit on small capital)
 CAPITAL_PER_TRADE = 10.0        # $10 per trade (100% of small balance)
 PYRAMIDING = 1                  # STRICTLY 1 — no multiple positions at the same time
-HARD_STOP_LOSS_PCT = 0.08       # 8% hard SL below entry (emergency liquidation protection)
+HARD_STOP_LOSS_PCT = 0.015      # 1.5% hard SL below entry (at 50x this = 75% account loss)
 
 # ============================================================
 # DAILY DRAWDOWN PROTECTION

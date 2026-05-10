@@ -19,10 +19,8 @@ def ping_server():
 
     try:
         response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            logger.info(f"Keep-alive ping successful: {url}")
-        else:
-            logger.warning(f"Keep-alive ping failed with status {response.status_code}")
+        # Any response means the server is alive — that's all we need
+        logger.info(f"Keep-alive ping: status={response.status_code}, url={url}")
     except requests.exceptions.RequestException as e:
         logger.error(f"Keep-alive ping error: {e}")
 

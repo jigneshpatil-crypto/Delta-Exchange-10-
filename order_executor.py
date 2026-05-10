@@ -351,8 +351,10 @@ class OrderExecutor:
                 return False, None, "Failed to place retry exit order"
 
         # Calculate PnL
+        # Each contract = 0.001 BTC
+        # PnL in USD = (exit_price - entry_price) * size * contract_value_btc
         pnl_pct = (exit_price - entry_price) / entry_price
-        pnl_usd = pnl_pct * size  # Approximate
+        pnl_usd = (exit_price - entry_price) * size * 0.001
 
         # Update trade record
         self.db.update_trade({
