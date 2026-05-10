@@ -96,7 +96,7 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
 # ============================================================
-# DATABASE (Supabase PostgreSQL)  (DO NOT MODIFY — retained)
+# DATABASE (Neon PostgreSQL)  (DO NOT MODIFY — retained)
 # ============================================================
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 

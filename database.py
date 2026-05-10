@@ -1,6 +1,6 @@
 """
 Heikin-Ashi + Chandelier Exit + LSMA Filter — Database Layer
-Supabase PostgreSQL for trade persistence and bot state.
+Neon PostgreSQL for trade persistence and bot state.
 """
 import json, logging
 from datetime import datetime, timezone
@@ -23,7 +23,7 @@ class Database:
         try:
             self.conn = psycopg2.connect(config.DATABASE_URL, sslmode="require", connect_timeout=10)
             self.conn.autocommit = True
-            logger.info("Connected to Supabase PostgreSQL")
+            logger.info("Connected to Neon PostgreSQL")
         except Exception as e:
             logger.error(f"DB connection failed: {e}")
             self.conn = None

@@ -11,7 +11,7 @@ numpy>=1.26.0
 flask>=3.0.0
 gunicorn>=21.2.0
 
-# --- Database (Supabase PostgreSQL) ---
+# --- Database (Neon PostgreSQL) ---
 psycopg2-binary>=2.9.9
 
 # --- Scheduler ---
